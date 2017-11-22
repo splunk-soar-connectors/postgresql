@@ -123,20 +123,6 @@ class PostgresqlConnector(BaseConnector):
             format_vars = csv.reader([format_vars], quotechar='"', skipinitialspace=True).next()
         return format_vars
 
-    def _handle_update_db(self, param):
-        action_result = self.add_action_result(ActionResult(dict(param)))
-        statement = param['statement']
-        format_vars = self._get_format_vars(param)
-        try:
-            self._cursor.execute(statement, format_vars)
-            self._connection.commit()
-        except Exception as e:
-            return action_result.set_status(
-                phantom.APP_ERROR, "Error executing statement", e
-            )
-
-        return action_result.set_status(phantom.APP_SUCCESS, "Successfully updated database")
-
     def _handle_run_query(self, param):
         action_result = self.add_action_result(ActionResult(dict(param)))
         query = param['query']
@@ -148,15 +134,31 @@ class PostgresqlConnector(BaseConnector):
                 phantom.APP_ERROR, "Error running query", e
             )
 
+        if not param.get('no_commit', False):
+            try:
+                self._connection.commit()
+            except Exception as e:
+                return action_result.set_status(
+                    phantom.APP_ERROR, "Unable to commit changes", e
+                )
+
         # Transform output to include column names
         try:
             columns = self._cursor.description
             result = [{columns[index][0]:column for index, column in enumerate(value)} for value in self._cursor.fetchall()]
         except Exception as e:
-            return action_result.set_status(phantom.APP_ERROR, "Unable to retrieve output from query", e)
+            # This probably means it was a query like an insert or something that didn't return any rows
+            self.debug_print("Unable to retrieve results from query: {}".format(str(e)))
+            result = []
 
         for row in result:
             action_result.add_data(row)
+
+        summary = action_result.update_summary({})
+        if self._cursor.rowcount > 0:
+            summary['total_rows'] = self._cursor.rowcount
+        else:
+            summary['total_rows'] = 0
 
         return action_result.set_status(phantom.APP_SUCCESS, "Successfully ran query")
 
@@ -216,9 +218,6 @@ class PostgresqlConnector(BaseConnector):
 
         elif action_id == 'list_tables':
             ret_val = self._handle_list_tables(param)
-
-        elif action_id == "update_db":
-            ret_val = self._handle_update_db(param)
 
         return ret_val
 
