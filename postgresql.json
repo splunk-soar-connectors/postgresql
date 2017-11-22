@@ -1,7 +1,7 @@
 {
     "appid": "958012c1-4ad4-4e94-9ad2-6a0ffe053532",
     "name": "PostgreSQL",
-    "description": "This app supports several query actions against a PostgreSQL database",
+    "description": "This app supports several actions against a PostgreSQL database",
     "type": "information",
     "product_vendor": "PostgreSQL",
     "logo": "postgresql.png",
@@ -13,7 +13,7 @@
     "utctime_updated": "2017-11-16T00:06:29.080497Z",
     "package_name": "phantom_postgresql",
     "main_module": "postgresql_connector.pyc",
-    "min_phantom_version": "3.0.264",
+    "min_phantom_version": "3.0.251",
     "app_wizard_version": "1.0.0",
     "configuration": {
         "host": {

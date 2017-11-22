@@ -66,6 +66,5 @@ def display_query_results(provides, all_results, context):
         "recordsTotal": total,
         "recordsFiltered": total,
     }
-    print json.dumps(content)
 
     return HttpResponse(json.dumps(content), content_type='text/javascript')

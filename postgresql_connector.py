@@ -224,7 +224,6 @@ class PostgresqlConnector(BaseConnector):
 
 if __name__ == '__main__':
 
-    import sys
     import pudb
     import argparse
 
@@ -270,11 +269,7 @@ if __name__ == '__main__':
             print ("Unable to get session id from the platfrom. Error: " + str(e))
             exit(1)
 
-    if (len(sys.argv) < 2):
-        print "No test json specified as input"
-        exit(0)
-
-    with open(sys.argv[1]) as f:
+    with open(args.input_test_json) as f:
         in_json = f.read()
         in_json = json.loads(in_json)
         print(json.dumps(in_json, indent=4))
