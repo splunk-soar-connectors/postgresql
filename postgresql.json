@@ -1,0 +1,583 @@
+{
+    "appid": "958012c1-4ad4-4e94-9ad2-6a0ffe053532",
+    "name": "PostgreSQL",
+    "description": "This app supports investigative actions against a PostgreSQL database",
+    "type": "information",
+    "product_vendor": "PostgreSQL",
+    "logo": "postgresql.png",
+    "product_name": "PostgreSQL",
+    "product_version_regex": ".*",
+    "publisher": "Phantom",
+    "license": "Copyright Phantom 2017",
+    "app_version": "1.0.0",
+    "utctime_updated": "2017-11-16T00:06:29.080497Z",
+    "package_name": "phantom_postgresql",
+    "main_module": "postgresql_connector.pyc",
+    "min_phantom_version": "3.0.251",
+    "app_wizard_version": "1.0.0",
+    "configuration": {
+        "host": {
+            "description": "Hostname or IP address",
+            "data_type": "string",
+            "required": true,
+            "order": 0
+        },
+        "username": {
+            "description": "Username",
+            "data_type": "string",
+            "required": true,
+            "order": 1
+        },
+        "password": {
+            "description": "Password",
+            "data_type": "password",
+            "required": true,
+            "order": 2
+        },
+        "database": {
+            "description": "Database",
+            "data_type": "string",
+            "required": true,
+            "order": 3
+        },
+        "other": {
+            "description": "JSON Object of other libpq connection parameters",
+            "data_type": "string",
+            "required": false,
+            "order": 4
+        }
+    },
+    "actions": [
+        {
+            "action": "test connectivity",
+            "identifier": "test_connectivity",
+            "description": "Validate the asset configuration for connectivity using supplied configuration",
+            "verbose": "",
+            "type": "test",
+            "read_only": true,
+            "parameters": {},
+            "output": [],
+            "versions": "EQ(*)"
+        },
+        {
+            "action": "run query",
+            "identifier": "run_query",
+            "description": "Run a query against a table or tables in the database",
+            "type": "investigate",
+            "verbose": "It is recommended to use the <b>format_vars</b> parameter when applicable. For example, if you wanted to find a specific IP, you could set <b>query</b> to a formatted string, like \"select * from my_hosts where ip = %s\" (note the use of %s), and set <b>format_vars</b> to the IP address. This will ensure the inputs are safely sanitizeds and avoid SQL injection attacks. Regardless of the type of input its expecting, the only format specifier which should be used is %s.<br>Setting <b>no_commit</b> will make it so the App does not commit any changes made to the DB (So, you can ensure its a read only query). However, this will only have an effect if auto commiting is not turned on on the database.",
+            "read_only": false,
+            "parameters": {
+                "query": {
+                    "description": "Query string",
+                    "data_type": "string",
+                    "required": true,
+                    "primary": true,
+                    "contains": [
+                        "sql query"
+                    ],
+                    "order": 0
+                },
+                "format_vars": {
+                    "description": "Comma seperated list of variables",
+                    "data_type": "string",
+                    "required": false,
+                    "primary": false,
+                    "order": 1
+                },
+                "no_commit": {
+                    "description": "Do not commit changes to database",
+                    "data_type": "boolean",
+                    "required": false,
+                    "default": false,
+                    "order": 2
+                }
+            },
+            "output": [
+                {
+                    "data_path": "action_result.parameter.query",
+                    "data_type": "string",
+                    "contains": [
+                        "sql query"
+                    ]
+                },
+                {
+                    "data_path": "action_result.parameter.format_vars",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.parameter.no_commit",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.status",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.message",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.summary",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "summary.total_objects",
+                    "data_type": "numeric"
+                },
+                {
+                    "data_path": "summary.total_objects_successful",
+                    "data_type": "numeric"
+                }
+            ],
+            "render": {
+                "type": "custom",
+                "view": "postgresql_view.display_query_results"
+            },
+            "versions": "EQ(*)"
+        },
+        {
+            "action": "list columns",
+            "identifier": "list_columns",
+            "description": "List the columns of a table",
+            "verbose": "",
+            "type": "investigate",
+            "read_only": true,
+            "parameters": {
+                "table_name": {
+                    "description": "Name of table",
+                    "data_type": "string",
+                    "required": true,
+                    "primary": true,
+                    "contains": [
+                        "postgres table name"
+                    ],
+                    "order": 0
+                }
+            },
+            "output": [
+                {
+                    "data_path": "action_result.parameter.table_name",
+                    "data_type": "string",
+                    "contains": [
+                        "postgres table name"
+                    ],
+                    "example_values": [
+                        "users"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.status",
+                    "data_type": "string",
+                    "example_values": [
+                        "success"
+                    ]
+                },
+                {
+                    "data_path": "action_result.message",
+                    "data_type": "string",
+                    "example_values": [
+                        "Successfully listed all columns"
+                    ]
+                },
+                {
+                    "data_path": "action_result.summary",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "summary.total_objects",
+                    "data_type": "numeric",
+                    "example_values": [
+                        1
+                    ]
+                },
+                {
+                    "data_path": "summary.total_objects_successful",
+                    "data_type": "numeric",
+                    "example_values": [
+                        1
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.character_octet_length",
+                    "data_type": "numeric"
+                },
+                {
+                    "data_path": "action_result.data.*.table_schema",
+                    "data_type": "string",
+                    "example_values": [
+                        "public"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.character_maximum_length",
+                    "data_type": "numeric",
+                    "example_values": [
+                        32
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.ordinal_position",
+                    "data_type": "numeric",
+                    "example_values": [
+                        1
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.identity_maximum",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.scope_catalog",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.collation_catalog",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.table_name",
+                    "data_type": "string",
+                    "contains": [
+                        "postgres table name"
+                    ],
+                    "example_values": [
+                        "users"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.domain_schema",
+                    "data_type": "string",
+                    "contains": [
+                        "domain"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.maximum_cardinality",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.data_type",
+                    "data_type": "string",
+                    "example_values": [
+                        "character"
+                    ],
+                    "column_name": "Data Type",
+                    "column_order": 1
+                },
+                {
+                    "data_path": "action_result.data.*.is_self_referencing",
+                    "data_type": "string",
+                    "example_values": [
+                        "NO"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.is_generated",
+                    "data_type": "string",
+                    "example_values": [
+                        "NEVER"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.domain_name",
+                    "data_type": "string",
+                    "contains": [
+                        "domain"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.is_updatable",
+                    "data_type": "string",
+                    "example_values": [
+                        "YES"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.dtd_identifier",
+                    "data_type": "string",
+                    "example_values": [
+                        "1"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.identity_minimum",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.udt_name",
+                    "data_type": "string",
+                    "example_values": [
+                        "bpchar"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.collation_name",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.numeric_scale",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.domain_catalog",
+                    "data_type": "string",
+                    "contains": [
+                        "domain"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.identity_increment",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.generation_expression",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.numeric_precision_radix",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.interval_precision",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.udt_catalog",
+                    "data_type": "string",
+                    "example_values": [
+                        "postgres"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.scope_name",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.collation_schema",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.column_default",
+                    "data_type": "string",
+                    "column_name": "Default",
+                    "column_order": 2
+                },
+                {
+                    "data_path": "action_result.data.*.table_catalog",
+                    "data_type": "string",
+                    "example_values": [
+                        "postgres"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.numeric_precision",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.identity_start",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.udt_schema",
+                    "data_type": "string",
+                    "example_values": [
+                        "pg_catalog"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.character_set_name",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.scope_schema",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.interval_type",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.identity_generation",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.character_set_schema",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.is_nullable",
+                    "data_type": "string",
+                    "example_values": [
+                        "YES"
+                    ],
+                    "column_name": "Is Nullable",
+                    "column_order": 3
+                },
+                {
+                    "data_path": "action_result.data.*.is_identity",
+                    "data_type": "string",
+                    "example_values": [
+                        "NO"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.datetime_precision",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.character_set_catalog",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.identity_cycle",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.column_name",
+                    "data_type": "string",
+                    "example_values": [
+                        "user_name"
+                    ],
+                    "column_name": "Column Name",
+                    "column_order": 0
+                }
+            ],
+            "render": {
+                "type": "table"
+            },
+            "versions": "EQ(*)"
+        },
+        {
+            "action": "list tables",
+            "identifier": "list_tables",
+            "description": "List the Tables in the Database",
+            "verbose": "Describes the structure of a table in the database by displaying information about its columns. The only tables which it will be able to query for must have a name composed of only alphanumeric characters + '_' and '$'.",
+            "type": "investigate",
+            "read_only": true,
+            "parameters": {},
+            "output": [
+                {
+                    "data_path": "action_result.data",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.status",
+                    "data_type": "string",
+                    "example_values": [
+                        "success"
+                    ]
+                },
+                {
+                    "data_path": "action_result.message",
+                    "data_type": "string",
+                    "example_values": [
+                        "Successfully listed all tables"
+                    ]
+                },
+                {
+                    "data_path": "action_result.summary",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "summary.total_objects",
+                    "data_type": "numeric",
+                    "example_values": [
+                        1
+                    ]
+                },
+                {
+                    "data_path": "summary.total_objects_successful",
+                    "data_type": "numeric",
+                    "example_values": [
+                        1
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.commit_action",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.table_schema",
+                    "data_type": "string",
+                    "example_values": [
+                        "public"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.is_insertable_into",
+                    "data_type": "string",
+                    "example_values": [
+                        "YES"
+                    ],
+                    "column_name": "Insertable",
+                    "column_order": 1
+                },
+                {
+                    "data_path": "action_result.data.*.user_defined_type_schema",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.is_typed",
+                    "data_type": "string",
+                    "example_values": [
+                        "NO"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.table_name",
+                    "data_type": "string",
+                    "example_values": [
+                        "users"
+                    ],
+                    "contains": [
+                        "postgres table name"
+                    ],
+                    "column_name": "Table Name",
+                    "column_order": 0
+                },
+                {
+                    "data_path": "action_result.data.*.table_type",
+                    "data_type": "string",
+                    "example_values": [
+                        "BASE TABLE"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.self_referencing_column_name",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.table_catalog",
+                    "data_type": "string",
+                    "example_values": [
+                        "postgres"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.user_defined_type_name",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.reference_generation",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.user_defined_type_catalog",
+                    "data_type": "string"
+                }
+            ],
+            "render": {
+                "type": "table"
+            },
+            "versions": "EQ(*)"
+        }
+    ]
+}
