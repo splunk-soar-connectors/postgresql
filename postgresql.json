@@ -78,7 +78,7 @@
                     "order": 0
                 },
                 "format_vars": {
-                    "description": "Comma seperated list of variables",
+                    "description": "Comma separated list of variables",
                     "data_type": "string",
                     "required": false,
                     "primary": false,
