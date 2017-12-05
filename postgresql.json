@@ -64,7 +64,7 @@
             "identifier": "run_query",
             "description": "Run a query against a table or tables in the database",
             "type": "investigate",
-            "verbose": "It is recommended to use the <b>format_vars</b> parameter when applicable. For example, if you wanted to find a specific IP, you could set <b>query</b> to a formatted string, like \"select * from my_hosts where ip = %s\" (note the use of %s), and set <b>format_vars</b> to the IP address. This will ensure the inputs are safely sanitizeds and avoid SQL injection attacks. Regardless of the type of input its expecting, the only format specifier which should be used is %s.<br>Setting <b>no_commit</b> will make it so the App does not commit any changes made to the DB (So, you can ensure its a read only query). However, this will only have an effect if auto commiting is not turned on on the database.",
+            "verbose": "It is recommended to use the <b>format_vars</b> parameter when applicable. For example, if you wanted to find a specific IP, you could set <b>query</b> to a formatted string, like \"select * from my_hosts where ip = %s\" (note the use of %s), and set <b>format_vars</b> to the IP address. This will ensure the inputs are safely sanitizeds and avoid SQL injection attacks. Regardless of the type of input its expecting, the only format specifier which should be used is %s.<br>Setting <b>no_commit</b> will make it so the App does not commit any changes made to the DB (So, you can ensure its a read only query).",
             "read_only": false,
             "parameters": {
                 "query": {
