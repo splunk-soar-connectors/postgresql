@@ -8,9 +8,9 @@
     "product_name": "PostgreSQL",
     "product_version_regex": ".*",
     "publisher": "Phantom",
-    "license": "Copyright Phantom 2017",
-    "app_version": "1.0.0",
-    "utctime_updated": "2017-11-16T00:06:29.080497Z",
+    "license": "Copyright (c) Phantom Cyber Corporation, 2017",
+    "app_version": "1.0.2",
+    "utctime_updated": "2017-11-30T19:08:44.000000Z",
     "package_name": "phantom_postgresql",
     "main_module": "postgresql_connector.pyc",
     "min_phantom_version": "3.0.251",
@@ -64,7 +64,7 @@
             "identifier": "run_query",
             "description": "Run a query against a table or tables in the database",
             "type": "investigate",
-            "verbose": "It is recommended to use the <b>format_vars</b> parameter when applicable. For example, if you wanted to find a specific IP, you could set <b>query</b> to a formatted string, like \"select * from my_hosts where ip = %s\" (note the use of %s), and set <b>format_vars</b> to the IP address. This will ensure the inputs are safely sanitizeds and avoid SQL injection attacks. Regardless of the type of input its expecting, the only format specifier which should be used is %s.<br>Setting <b>no_commit</b> will make it so the App does not commit any changes made to the DB (So, you can ensure its a read only query).",
+            "verbose": "It is recommended to use the <b>format_vars</b> parameter when applicable. For example, if you wanted to find a specific IP, you could set <b>query</b> to a formatted string, like \"select * from my_hosts where ip = %s\" (note the use of %s), and set <b>format_vars</b> to the IP address. This will ensure the inputs are safely sanitizeds and avoid SQL injection attacks. Regardless of the type of input its expecting, the only format specifier which should be used is %s.<br>Setting <b>no_commit</b> will make it so the App does not commit any changes made to the database (so you can ensure it's a read only query).",
             "read_only": false,
             "parameters": {
                 "query": {
@@ -458,7 +458,7 @@
         {
             "action": "list tables",
             "identifier": "list_tables",
-            "description": "List the Tables in the Database",
+            "description": "List the tables in the database",
             "verbose": "Describes the structure of a table in the database by displaying information about its columns. The only tables which it will be able to query for must have a name composed of only alphanumeric characters + '_' and '$'.",
             "type": "investigate",
             "read_only": true,
