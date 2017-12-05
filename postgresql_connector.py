@@ -176,6 +176,9 @@ class PostgresqlConnector(BaseConnector):
         columns = self._cursor.description
         result = [{columns[index][0]:column for index, column in enumerate(value)} for value in self._cursor.fetchall()]
 
+        if len(result) == 0:
+            return action_result.set_status(phantom.APP_ERROR, "No column information could be found for given table")
+
         for row in result:
             action_result.add_data(row)
         return action_result.set_status(phantom.APP_SUCCESS, "Successfully listed all columns")
