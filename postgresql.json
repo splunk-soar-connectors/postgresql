@@ -156,6 +156,14 @@
                         "postgres table name"
                     ],
                     "order": 0
+                },
+                "table_schema": {
+                    "description": "Table schema",
+                    "data_type": "string",
+                    "required": false,
+                    "primary": false,
+                    "default": "public",
+                    "order": 1
                 }
             },
             "output": [
@@ -167,6 +175,13 @@
                     ],
                     "example_values": [
                         "users"
+                    ]
+                },
+                {
+                    "data_path": "action_result.parameter.table_schema",
+                    "data_type": "string",
+                    "example_values": [
+                        "myschema"
                     ]
                 },
                 {
@@ -462,8 +477,24 @@
             "verbose": "Describes the structure of a table in the database by displaying information about its columns. The only tables which it will be able to query for must have a name composed of only alphanumeric characters + '_' and '$'.",
             "type": "investigate",
             "read_only": true,
-            "parameters": {},
+            "parameters": {
+                "table_schema": {
+                    "description": "Table schema",
+                    "data_type": "string",
+                    "required": false,
+                    "primary": false,
+                    "default": "public",
+                    "order": 0
+                }
+            },
             "output": [
+                {
+                    "data_path": "action_result.parameter.table_schema",
+                    "data_type": "string",
+                    "example_values": [
+                        "myschema"
+                    ]
+                },
                 {
                     "data_path": "action_result.data",
                     "data_type": "string"
