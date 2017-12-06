@@ -165,9 +165,25 @@ class PostgresqlConnector(BaseConnector):
     def _handle_list_columns(self, param):
         action_result = self.add_action_result(ActionResult(dict(param)))
         table_name = param['table_name']
-        query = "SELECT * FROM INFORMATION_SCHEMA.COLUMNS where table_name = %s;"
+        table_schema = param.get('table_schema', 'public')
+
+        # First check if table exists
+        query = "SELECT * FROM information_schema.tables WHERE table_name = %s and table_schema = %s;"
         try:
-            self._cursor.execute(query, (table_name,))
+            self._cursor.execute(query, (table_name, table_schema))
+        except Exception as e:
+            return action_result.set_status(
+                phantom.APP_ERROR, "Error listing columns", e
+            )
+
+        results = self._cursor.fetchall()
+        if len(results) == 0:
+            return action_result.set_status(phantom.APP_ERROR, "The specified table could not be found")
+
+        # Check the columns
+        query = "SELECT * FROM INFORMATION_SCHEMA.COLUMNS where table_name = %s and table_schema = %s;"
+        try:
+            self._cursor.execute(query, (table_name, table_schema))
         except Exception as e:
             return action_result.set_status(
                 phantom.APP_ERROR, "Error listing columns", e
@@ -182,9 +198,10 @@ class PostgresqlConnector(BaseConnector):
 
     def _handle_list_tables(self, param):
         action_result = self.add_action_result(ActionResult(dict(param)))
-        query = "select * from information_schema.tables where table_schema = 'public';"
+        table_schema = param.get('table_schema', 'public')
+        query = "select * from information_schema.tables where table_schema = %s;"
         try:
-            self._cursor.execute(query)
+            self._cursor.execute(query, (table_schema,))
         except Exception as e:
             return action_result.set_status(
                 phantom.APP_ERROR, "Error listing tables", e
