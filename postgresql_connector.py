@@ -199,6 +199,21 @@ class PostgresqlConnector(BaseConnector):
     def _handle_list_tables(self, param):
         action_result = self.add_action_result(ActionResult(dict(param)))
         table_schema = param.get('table_schema', 'public')
+
+        # Check for existance of table schema
+        query = "select * from information_schema.schemata where schema_name = %s;"
+        try:
+            self._cursor.execute(query, (table_schema,))
+        except Exception as e:
+            return action_result.set_status(
+                phantom.APP_ERROR, "Error retrieving schemata", e
+            )
+
+        results = self._cursor.fetchall()
+        if len(results) == 0:
+            return action_result.set_status(phantom.APP_ERROR, "No matching table schemas could be found")
+
+        # Check for tables
         query = "select * from information_schema.tables where table_schema = %s;"
         try:
             self._cursor.execute(query, (table_schema,))
