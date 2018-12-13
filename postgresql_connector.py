@@ -1,45 +1,41 @@
-# --
 # File: postgresql_connector.py
+# Copyright (c) 2017-2018 Splunk Inc.
 #
-# Copyright (c) Phantom Cyber Corporation, 2017
-#
-# This unpublished material is proprietary to Phantom Cyber.
-# All rights reserved. The methods and
-# techniques described herein are considered trade secrets
-# and/or confidential. Reproduction or distribution, in whole
-# or in part, is forbidden except by express written permission
-# of Phantom Cyber.
-#
-# --
-
-try:
-    # Fix Library Import
-    # NOTE: These need to be loaded in this order
-    from ctypes import cdll
-    cdll.LoadLibrary('/opt/phantom/usr/lib64/python2.7/site-packages/psycopg2/.libs/libkeyutils-1-ff31573b.2.so')
-    cdll.LoadLibrary('/opt/phantom/usr/lib64/python2.7/site-packages/psycopg2/.libs/libresolv-2-c4c53def.5.so')
-    cdll.LoadLibrary('/opt/phantom/usr/lib64/python2.7/site-packages/psycopg2/.libs/libsepol-b4f5b513.so.1')
-    cdll.LoadLibrary('/opt/phantom/usr/lib64/python2.7/site-packages/psycopg2/.libs/libselinux-cf8f9094.so.1')
-    cdll.LoadLibrary('/opt/phantom/usr/lib64/python2.7/site-packages/psycopg2/.libs/libkrb5support-d7ce89d4.so.0.1')
-    cdll.LoadLibrary('/opt/phantom/usr/lib64/python2.7/site-packages/psycopg2/.libs/libresolv-2-c4c53def.5.so')
-    cdll.LoadLibrary('/opt/phantom/usr/lib64/python2.7/site-packages/psycopg2/.libs/libk5crypto-622ef25b.so.3.1')
-    cdll.LoadLibrary('/opt/phantom/usr/lib64/python2.7/site-packages/psycopg2/.libs/libcom_err-beb60336.so.2.1')
-    cdll.LoadLibrary('/opt/phantom/usr/lib64/python2.7/site-packages/psycopg2/.libs/libkrb5-fb0d2caa.so.3.3')
-    cdll.LoadLibrary('/opt/phantom/usr/lib64/python2.7/site-packages/psycopg2/.libs/libz-a147dcb0.so.1.2.3')
-    cdll.LoadLibrary('/opt/phantom/usr/lib64/python2.7/site-packages/psycopg2/.libs/libgssapi_krb5-174f8956.so.2.2')
-    cdll.LoadLibrary('/opt/phantom/usr/lib64/python2.7/site-packages/psycopg2/.libs/libcrypto-aa58ed98.so.1.0.2k')
-    cdll.LoadLibrary('/opt/phantom/usr/lib64/python2.7/site-packages/psycopg2/.libs/libssl-cdf7ba29.so.1.0.2k')
-    cdll.LoadLibrary('/opt/phantom/usr/lib64/python2.7/site-packages/psycopg2/.libs/liblber-2-14d46c3c.4.so.2.10.7')
-    cdll.LoadLibrary('/opt/phantom/usr/lib64/python2.7/site-packages/psycopg2/.libs/libsasl2-e96a0dbf.so.2.0.22')
-    cdll.LoadLibrary('/opt/phantom/usr/lib64/python2.7/site-packages/psycopg2/.libs/libldap_r-2-3a9294b6.4.so.2.10.7')
-    cdll.LoadLibrary('/opt/phantom/usr/lib64/python2.7/site-packages/psycopg2/.libs/libpq-9c51d239.so.5.9')
-except:
-    pass
+# SPLUNK CONFIDENTIAL - Use or disclosure of this material in whole or in part
+# without a valid written license from Splunk Inc. is PROHIBITED.
 
 # Phantom App imports
 import phantom.app as phantom
 from phantom.base_connector import BaseConnector
 from phantom.action_result import ActionResult
+
+try:
+    # Fix Library Import
+    # NOTE: These need to be loaded in this order
+    from ctypes import cdll
+    if hasattr(BaseConnector, 'get_phantom_home'):
+        home_dir = BaseConnector._get_phantom_home()
+    else:
+        home_dir = '/opt/phantom'
+    cdll.LoadLibrary(home_dir + '/usr/lib64/python2.7/site-packages/psycopg2/.libs/libkeyutils-1-ff31573b.2.so')
+    cdll.LoadLibrary(home_dir + '/usr/lib64/python2.7/site-packages/psycopg2/.libs/libresolv-2-c4c53def.5.so')
+    cdll.LoadLibrary(home_dir + '/usr/lib64/python2.7/site-packages/psycopg2/.libs/libsepol-b4f5b513.so.1')
+    cdll.LoadLibrary(home_dir + '/usr/lib64/python2.7/site-packages/psycopg2/.libs/libselinux-cf8f9094.so.1')
+    cdll.LoadLibrary(home_dir + '/usr/lib64/python2.7/site-packages/psycopg2/.libs/libkrb5support-d7ce89d4.so.0.1')
+    cdll.LoadLibrary(home_dir + '/usr/lib64/python2.7/site-packages/psycopg2/.libs/libresolv-2-c4c53def.5.so')
+    cdll.LoadLibrary(home_dir + '/usr/lib64/python2.7/site-packages/psycopg2/.libs/libk5crypto-622ef25b.so.3.1')
+    cdll.LoadLibrary(home_dir + '/usr/lib64/python2.7/site-packages/psycopg2/.libs/libcom_err-beb60336.so.2.1')
+    cdll.LoadLibrary(home_dir + '/usr/lib64/python2.7/site-packages/psycopg2/.libs/libkrb5-fb0d2caa.so.3.3')
+    cdll.LoadLibrary(home_dir + '/usr/lib64/python2.7/site-packages/psycopg2/.libs/libz-a147dcb0.so.1.2.3')
+    cdll.LoadLibrary(home_dir + '/usr/lib64/python2.7/site-packages/psycopg2/.libs/libgssapi_krb5-174f8956.so.2.2')
+    cdll.LoadLibrary(home_dir + '/usr/lib64/python2.7/site-packages/psycopg2/.libs/libcrypto-aa58ed98.so.1.0.2k')
+    cdll.LoadLibrary(home_dir + '/usr/lib64/python2.7/site-packages/psycopg2/.libs/libssl-cdf7ba29.so.1.0.2k')
+    cdll.LoadLibrary(home_dir + '/usr/lib64/python2.7/site-packages/psycopg2/.libs/liblber-2-14d46c3c.4.so.2.10.7')
+    cdll.LoadLibrary(home_dir + '/usr/lib64/python2.7/site-packages/psycopg2/.libs/libsasl2-e96a0dbf.so.2.0.22')
+    cdll.LoadLibrary(home_dir + '/usr/lib64/python2.7/site-packages/psycopg2/.libs/libldap_r-2-3a9294b6.4.so.2.10.7')
+    cdll.LoadLibrary(home_dir + '/usr/lib64/python2.7/site-packages/psycopg2/.libs/libpq-9c51d239.so.5.9')
+except:
+    pass
 
 # Usage of the consts file is recommended
 # from postgresql_consts import *
@@ -280,9 +276,10 @@ if __name__ == '__main__':
         password = getpass.getpass("Password: ")
 
     if (username and password):
+        login_url = BaseConnector._get_phantom_base_url() + "login"
         try:
             print ("Accessing the Login page")
-            r = requests.get("https://127.0.0.1/login", verify=False)
+            r = requests.get(login_url, verify=False)
             csrftoken = r.cookies['csrftoken']
 
             data = dict()
@@ -292,10 +289,10 @@ if __name__ == '__main__':
 
             headers = dict()
             headers['Cookie'] = 'csrftoken=' + csrftoken
-            headers['Referer'] = 'https://127.0.0.1/login'
+            headers['Referer'] = login_url
 
             print ("Logging into Platform to get the session id")
-            r2 = requests.post("https://127.0.0.1/login", verify=False, data=data, headers=headers)
+            r2 = requests.post(login_url, verify=False, data=data, headers=headers)
             session_id = r2.cookies['sessionid']
         except Exception as e:
             print ("Unable to get session id from the platfrom. Error: " + str(e))
