@@ -1,16 +1,8 @@
-# --
 # File: postgresql_connector.py
+# Copyright (c) 2017-2018 Splunk Inc.
 #
-# Copyright (c) Phantom Cyber Corporation, 2017
-#
-# This unpublished material is proprietary to Phantom Cyber.
-# All rights reserved. The methods and
-# techniques described herein are considered trade secrets
-# and/or confidential. Reproduction or distribution, in whole
-# or in part, is forbidden except by express written permission
-# of Phantom Cyber.
-#
-# --
+# SPLUNK CONFIDENTIAL - Use or disclosure of this material in whole or in part
+# without a valid written license from Splunk Inc. is PROHIBITED.
 
 try:
     # Fix Library Import
@@ -47,6 +39,7 @@ import csv
 import json
 import psycopg2
 import requests
+from datetime import date, datetime
 
 
 class RetVal(tuple):
@@ -145,7 +138,15 @@ class PostgresqlConnector(BaseConnector):
         # Transform output to include column names
         try:
             columns = self._cursor.description
-            result = [{columns[index][0]:column for index, column in enumerate(value)} for value in self._cursor.fetchall()]
+
+            result = []
+            for value in self._cursor.fetchall():
+                info = {}
+                for index, column in enumerate(value):
+                    if isinstance(column, (datetime, date)):
+                        column = column.isoformat()
+                    info[columns[index][0]] = column
+                result.append(info)
         except Exception as e:
             # This probably means it was a query like an insert or something that didn't return any rows
             self.debug_print("Unable to retrieve results from query: {}".format(str(e)))
