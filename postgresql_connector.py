@@ -43,6 +43,7 @@ import csv
 import json
 import psycopg2
 import requests
+from datetime import date, datetime
 
 
 class RetVal(tuple):
@@ -141,7 +142,15 @@ class PostgresqlConnector(BaseConnector):
         # Transform output to include column names
         try:
             columns = self._cursor.description
-            result = [{columns[index][0]:column for index, column in enumerate(value)} for value in self._cursor.fetchall()]
+
+            result = []
+            for value in self._cursor.fetchall():
+                info = {}
+                for index, column in enumerate(value):
+                    if isinstance(column, (datetime, date)):
+                        column = column.isoformat()
+                    info[columns[index][0]] = column
+                result.append(info)
         except Exception as e:
             # This probably means it was a query like an insert or something that didn't return any rows
             self.debug_print("Unable to retrieve results from query: {}".format(str(e)))
