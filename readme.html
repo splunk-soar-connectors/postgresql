@@ -10,3 +10,9 @@ This app will ignore the HTTP_PROXY and HTTPS_PROXY environment variables, as it
 <p>
 This app will use <b>public</b> as default schema if no schema provided.
 </p>
+<p>
+For more details on configuration parameter 'JSON Object of other libpq connection parameters', please visit the <a href="http://initd.org/psycopg/docs/module.html">LibPQ Connection Parameters Page</a>.
+</p>
+<p>
+User can provide a JSON object comprising of the libpq connection parameters in addition to username, password, and dbname which are already available in configuration of the asset. This JSON object's value will be used in establishing the connection with the PostgreSQL server.
+</p>
