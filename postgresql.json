@@ -4,16 +4,17 @@
     "description": "This app supports investigative actions against a PostgreSQL database",
     "type": "information",
     "product_vendor": "PostgreSQL",
-    "logo": "postgresql.png",
+    "logo": "logo_postgresql.svg",
+    "logo_dark": "logo_postgresql_dark.svg",
     "product_name": "PostgreSQL",
     "product_version_regex": ".*",
     "publisher": "Phantom",
-    "license": "Copyright (c) Phantom Cyber Corporation, 2017",
-    "app_version": "1.0.5",
-    "utctime_updated": "2017-12-18T19:38:06.000000Z",
+    "license": "Copyright (c) 2017-2019 Splunk Inc.",
+    "app_version": "1.0.14",
+    "utctime_updated": "2019-01-04T02:09:23.000000Z",
     "package_name": "phantom_postgresql",
     "main_module": "postgresql_connector.pyc",
-    "min_phantom_version": "3.0.251",
+    "min_phantom_version": "4.0.1068",
     "app_wizard_version": "1.0.0",
     "configuration": {
         "host": {
@@ -64,7 +65,7 @@
             "identifier": "run_query",
             "description": "Run a query against a table or tables in the database",
             "type": "investigate",
-            "verbose": "It is recommended to use the <b>format_vars</b> parameter when applicable. For example, if you wanted to find a specific IP, you could set <b>query</b> to a formatted string, like \"select * from my_hosts where ip = %s\" (note the use of %s), and set <b>format_vars</b> to the IP address. This will ensure the inputs are safely sanitizeds and avoid SQL injection attacks. Regardless of the type of input its expecting, the only format specifier which should be used is %s.<br>Setting <b>no_commit</b> will make it so the App does not commit any changes made to the database (so you can ensure it's a read only query).<br><br>The <b>format_vars</b> parameter accepts a comma seperated list. You can escape commas by surrounding them in double quotes, and escape double quotes with a backslash. Assuming you have a list of values for the format vars, you can employ this code in your playbooks to properly format it into a string:<br> <code>format_vars_str = ','.join(['\"{}\"'.format(str(x).replace('\\\\', '\\\\\\\\').replace('\"', '\\\\\"')) for x in format_vars_list])</code>",
+            "verbose": "It is recommended to use the <b>format_vars</b> parameter when applicable. For example, if you wanted to find a specific IP, you could set the <b>query</b> to a formatted string, like \"select * from my_hosts where ip = %s\" (note the use of %s), and set <b>format_vars</b> to the IP address. This will ensure the inputs are safely sanitized and avoid SQL injection attacks. Regardless of the type of input it's expecting, the only format specifier which should be used is %s.<br>Setting <b>no_commit</b> will make it so the App does not commit any changes made to the database (so you can ensure it's a read only query).<br><br>The <b>format_vars</b> parameter accepts a comma seperated list. You can escape commas by surrounding them in double quotes, and escape double quotes with a backslash. Assuming you have a list of values for the format vars, you can employ this code in your playbooks to properly format it into a string:<br> <code>format_vars_str = ','.join(['\"{}\"'.format(str(x).replace('\\\\', '\\\\\\\\').replace('\"', '\\\\\"')) for x in format_vars_list])</code>",
             "read_only": false,
             "parameters": {
                 "query": {
@@ -94,11 +95,8 @@
             },
             "output": [
                 {
-                    "data_path": "action_result.parameter.query",
-                    "data_type": "string",
-                    "contains": [
-                        "sql query"
-                    ]
+                    "data_path": "action_result.status",
+                    "data_type": "string"
                 },
                 {
                     "data_path": "action_result.parameter.format_vars",
@@ -109,19 +107,26 @@
                     "data_type": "string"
                 },
                 {
+                    "data_path": "action_result.parameter.query",
+                    "data_type": "string",
+                    "contains": [
+                        "sql query"
+                    ]
+                },
+                {
                     "data_path": "action_result.data",
                     "data_type": "string"
                 },
                 {
-                    "data_path": "action_result.status",
+                    "data_path": "action_result.summary",
                     "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.summary.total_rows",
+                    "data_type": "numeric"
                 },
                 {
                     "data_path": "action_result.message",
-                    "data_type": "string"
-                },
-                {
-                    "data_path": "action_result.summary",
                     "data_type": "string"
                 },
                 {
@@ -168,6 +173,13 @@
             },
             "output": [
                 {
+                    "data_path": "action_result.status",
+                    "data_type": "string",
+                    "example_values": [
+                        "success"
+                    ]
+                },
+                {
                     "data_path": "action_result.parameter.table_name",
                     "data_type": "string",
                     "contains": [
@@ -189,11 +201,252 @@
                     "data_type": "string"
                 },
                 {
-                    "data_path": "action_result.status",
+                    "data_path": "action_result.data.*.character_maximum_length",
+                    "data_type": "numeric",
+                    "example_values": [
+                        32
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.character_octet_length",
+                    "data_type": "numeric"
+                },
+                {
+                    "data_path": "action_result.data.*.character_set_catalog",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.character_set_name",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.character_set_schema",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.collation_catalog",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.collation_name",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.collation_schema",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.column_default",
+                    "data_type": "string",
+                    "column_name": "Default",
+                    "column_order": 2
+                },
+                {
+                    "data_path": "action_result.data.*.column_name",
                     "data_type": "string",
                     "example_values": [
-                        "success"
+                        "user_name"
+                    ],
+                    "column_name": "Column Name",
+                    "column_order": 0
+                },
+                {
+                    "data_path": "action_result.data.*.data_type",
+                    "data_type": "string",
+                    "example_values": [
+                        "character"
+                    ],
+                    "column_name": "Data Type",
+                    "column_order": 1
+                },
+                {
+                    "data_path": "action_result.data.*.datetime_precision",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.domain_catalog",
+                    "data_type": "string",
+                    "contains": [
+                        "domain"
                     ]
+                },
+                {
+                    "data_path": "action_result.data.*.domain_name",
+                    "data_type": "string",
+                    "contains": [
+                        "domain"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.domain_schema",
+                    "data_type": "string",
+                    "contains": [
+                        "domain"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.dtd_identifier",
+                    "data_type": "string",
+                    "example_values": [
+                        "1"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.generation_expression",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.identity_cycle",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.identity_generation",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.identity_increment",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.identity_maximum",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.identity_minimum",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.identity_start",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.interval_precision",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.interval_type",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.is_generated",
+                    "data_type": "string",
+                    "example_values": [
+                        "NEVER"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.is_identity",
+                    "data_type": "string",
+                    "example_values": [
+                        "NO"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.is_nullable",
+                    "data_type": "string",
+                    "example_values": [
+                        "YES"
+                    ],
+                    "column_name": "Is Nullable",
+                    "column_order": 3
+                },
+                {
+                    "data_path": "action_result.data.*.is_self_referencing",
+                    "data_type": "string",
+                    "example_values": [
+                        "NO"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.is_updatable",
+                    "data_type": "string",
+                    "example_values": [
+                        "YES"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.maximum_cardinality",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.numeric_precision",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.numeric_precision_radix",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.numeric_scale",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.ordinal_position",
+                    "data_type": "numeric",
+                    "example_values": [
+                        1
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.scope_catalog",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.scope_name",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.scope_schema",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.table_catalog",
+                    "data_type": "string",
+                    "example_values": [
+                        "postgres"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.table_name",
+                    "data_type": "string",
+                    "contains": [
+                        "postgres table name"
+                    ],
+                    "example_values": [
+                        "users"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.table_schema",
+                    "data_type": "string",
+                    "example_values": [
+                        "public"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.udt_catalog",
+                    "data_type": "string",
+                    "example_values": [
+                        "postgres"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.udt_name",
+                    "data_type": "string",
+                    "example_values": [
+                        "bpchar"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.udt_schema",
+                    "data_type": "string",
+                    "example_values": [
+                        "pg_catalog"
+                    ]
+                },
+                {
+                    "data_path": "action_result.summary",
+                    "data_type": "string"
                 },
                 {
                     "data_path": "action_result.message",
@@ -201,10 +454,6 @@
                     "example_values": [
                         "Successfully listed all columns"
                     ]
-                },
-                {
-                    "data_path": "action_result.summary",
-                    "data_type": "string"
                 },
                 {
                     "data_path": "summary.total_objects",
@@ -219,250 +468,6 @@
                     "example_values": [
                         1
                     ]
-                },
-                {
-                    "data_path": "action_result.data.*.character_octet_length",
-                    "data_type": "numeric"
-                },
-                {
-                    "data_path": "action_result.data.*.table_schema",
-                    "data_type": "string",
-                    "example_values": [
-                        "public"
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.character_maximum_length",
-                    "data_type": "numeric",
-                    "example_values": [
-                        32
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.ordinal_position",
-                    "data_type": "numeric",
-                    "example_values": [
-                        1
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.identity_maximum",
-                    "data_type": "string"
-                },
-                {
-                    "data_path": "action_result.data.*.scope_catalog",
-                    "data_type": "string"
-                },
-                {
-                    "data_path": "action_result.data.*.collation_catalog",
-                    "data_type": "string"
-                },
-                {
-                    "data_path": "action_result.data.*.table_name",
-                    "data_type": "string",
-                    "contains": [
-                        "postgres table name"
-                    ],
-                    "example_values": [
-                        "users"
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.domain_schema",
-                    "data_type": "string",
-                    "contains": [
-                        "domain"
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.maximum_cardinality",
-                    "data_type": "string"
-                },
-                {
-                    "data_path": "action_result.data.*.data_type",
-                    "data_type": "string",
-                    "example_values": [
-                        "character"
-                    ],
-                    "column_name": "Data Type",
-                    "column_order": 1
-                },
-                {
-                    "data_path": "action_result.data.*.is_self_referencing",
-                    "data_type": "string",
-                    "example_values": [
-                        "NO"
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.is_generated",
-                    "data_type": "string",
-                    "example_values": [
-                        "NEVER"
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.domain_name",
-                    "data_type": "string",
-                    "contains": [
-                        "domain"
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.is_updatable",
-                    "data_type": "string",
-                    "example_values": [
-                        "YES"
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.dtd_identifier",
-                    "data_type": "string",
-                    "example_values": [
-                        "1"
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.identity_minimum",
-                    "data_type": "string"
-                },
-                {
-                    "data_path": "action_result.data.*.udt_name",
-                    "data_type": "string",
-                    "example_values": [
-                        "bpchar"
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.collation_name",
-                    "data_type": "string"
-                },
-                {
-                    "data_path": "action_result.data.*.numeric_scale",
-                    "data_type": "string"
-                },
-                {
-                    "data_path": "action_result.data.*.domain_catalog",
-                    "data_type": "string",
-                    "contains": [
-                        "domain"
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.identity_increment",
-                    "data_type": "string"
-                },
-                {
-                    "data_path": "action_result.data.*.generation_expression",
-                    "data_type": "string"
-                },
-                {
-                    "data_path": "action_result.data.*.numeric_precision_radix",
-                    "data_type": "string"
-                },
-                {
-                    "data_path": "action_result.data.*.interval_precision",
-                    "data_type": "string"
-                },
-                {
-                    "data_path": "action_result.data.*.udt_catalog",
-                    "data_type": "string",
-                    "example_values": [
-                        "postgres"
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.scope_name",
-                    "data_type": "string"
-                },
-                {
-                    "data_path": "action_result.data.*.collation_schema",
-                    "data_type": "string"
-                },
-                {
-                    "data_path": "action_result.data.*.column_default",
-                    "data_type": "string",
-                    "column_name": "Default",
-                    "column_order": 2
-                },
-                {
-                    "data_path": "action_result.data.*.table_catalog",
-                    "data_type": "string",
-                    "example_values": [
-                        "postgres"
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.numeric_precision",
-                    "data_type": "string"
-                },
-                {
-                    "data_path": "action_result.data.*.identity_start",
-                    "data_type": "string"
-                },
-                {
-                    "data_path": "action_result.data.*.udt_schema",
-                    "data_type": "string",
-                    "example_values": [
-                        "pg_catalog"
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.character_set_name",
-                    "data_type": "string"
-                },
-                {
-                    "data_path": "action_result.data.*.scope_schema",
-                    "data_type": "string"
-                },
-                {
-                    "data_path": "action_result.data.*.interval_type",
-                    "data_type": "string"
-                },
-                {
-                    "data_path": "action_result.data.*.identity_generation",
-                    "data_type": "string"
-                },
-                {
-                    "data_path": "action_result.data.*.character_set_schema",
-                    "data_type": "string"
-                },
-                {
-                    "data_path": "action_result.data.*.is_nullable",
-                    "data_type": "string",
-                    "example_values": [
-                        "YES"
-                    ],
-                    "column_name": "Is Nullable",
-                    "column_order": 3
-                },
-                {
-                    "data_path": "action_result.data.*.is_identity",
-                    "data_type": "string",
-                    "example_values": [
-                        "NO"
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.datetime_precision",
-                    "data_type": "string"
-                },
-                {
-                    "data_path": "action_result.data.*.character_set_catalog",
-                    "data_type": "string"
-                },
-                {
-                    "data_path": "action_result.data.*.identity_cycle",
-                    "data_type": "string"
-                },
-                {
-                    "data_path": "action_result.data.*.column_name",
-                    "data_type": "string",
-                    "example_values": [
-                        "user_name"
-                    ],
-                    "column_name": "Column Name",
-                    "column_order": 0
                 }
             ],
             "render": {
@@ -489,6 +494,13 @@
             },
             "output": [
                 {
+                    "data_path": "action_result.status",
+                    "data_type": "string",
+                    "example_values": [
+                        "success"
+                    ]
+                },
+                {
                     "data_path": "action_result.parameter.table_schema",
                     "data_type": "string",
                     "example_values": [
@@ -500,47 +512,8 @@
                     "data_type": "string"
                 },
                 {
-                    "data_path": "action_result.status",
-                    "data_type": "string",
-                    "example_values": [
-                        "success"
-                    ]
-                },
-                {
-                    "data_path": "action_result.message",
-                    "data_type": "string",
-                    "example_values": [
-                        "Successfully listed all tables"
-                    ]
-                },
-                {
-                    "data_path": "action_result.summary",
-                    "data_type": "string"
-                },
-                {
-                    "data_path": "summary.total_objects",
-                    "data_type": "numeric",
-                    "example_values": [
-                        1
-                    ]
-                },
-                {
-                    "data_path": "summary.total_objects_successful",
-                    "data_type": "numeric",
-                    "example_values": [
-                        1
-                    ]
-                },
-                {
                     "data_path": "action_result.data.*.commit_action",
                     "data_type": "string"
-                },
-                {
-                    "data_path": "action_result.data.*.table_schema",
-                    "data_type": "string",
-                    "example_values": [
-                        "public"
-                    ]
                 },
                 {
                     "data_path": "action_result.data.*.is_insertable_into",
@@ -552,14 +525,25 @@
                     "column_order": 1
                 },
                 {
-                    "data_path": "action_result.data.*.user_defined_type_schema",
-                    "data_type": "string"
-                },
-                {
                     "data_path": "action_result.data.*.is_typed",
                     "data_type": "string",
                     "example_values": [
                         "NO"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.reference_generation",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.self_referencing_column_name",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.table_catalog",
+                    "data_type": "string",
+                    "example_values": [
+                        "postgres"
                     ]
                 },
                 {
@@ -575,6 +559,13 @@
                     "column_order": 0
                 },
                 {
+                    "data_path": "action_result.data.*.table_schema",
+                    "data_type": "string",
+                    "example_values": [
+                        "public"
+                    ]
+                },
+                {
                     "data_path": "action_result.data.*.table_type",
                     "data_type": "string",
                     "example_values": [
@@ -582,27 +573,41 @@
                     ]
                 },
                 {
-                    "data_path": "action_result.data.*.self_referencing_column_name",
+                    "data_path": "action_result.data.*.user_defined_type_catalog",
                     "data_type": "string"
-                },
-                {
-                    "data_path": "action_result.data.*.table_catalog",
-                    "data_type": "string",
-                    "example_values": [
-                        "postgres"
-                    ]
                 },
                 {
                     "data_path": "action_result.data.*.user_defined_type_name",
                     "data_type": "string"
                 },
                 {
-                    "data_path": "action_result.data.*.reference_generation",
+                    "data_path": "action_result.data.*.user_defined_type_schema",
                     "data_type": "string"
                 },
                 {
-                    "data_path": "action_result.data.*.user_defined_type_catalog",
+                    "data_path": "action_result.summary",
                     "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.message",
+                    "data_type": "string",
+                    "example_values": [
+                        "Successfully listed all tables"
+                    ]
+                },
+                {
+                    "data_path": "summary.total_objects",
+                    "data_type": "numeric",
+                    "example_values": [
+                        1
+                    ]
+                },
+                {
+                    "data_path": "summary.total_objects_successful",
+                    "data_type": "numeric",
+                    "example_values": [
+                        1
+                    ]
                 }
             ],
             "render": {
