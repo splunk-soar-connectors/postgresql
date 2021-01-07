@@ -36,4 +36,4 @@ def display_query_results(provides, all_results, context):
                 table_data.append(row)
             results.append(table)
 
-    return 'phantom_multiple_actions.html'
+    return 'postgresql_run_query.html'
