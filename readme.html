@@ -1,5 +1,5 @@
 <!-- File: readme.html
-  Copyright (c) 2017-2019 Splunk Inc.
+  Copyright (c) 2017-2021 Splunk Inc.
 
   SPLUNK CONFIDENTIAL - Use or disclosure of this material in whole or in part
   without a valid written license from Splunk Inc. is PROHIBITED.
@@ -16,3 +16,22 @@ For more details on configuration parameter 'JSON Object of other libpq connecti
 <p>
 User can provide a JSON object comprising of the libpq connection parameters in addition to username, password, and dbname which are already available in configuration of the asset. This JSON object's value will be used in establishing the connection with the PostgreSQL server.
 </p>
+
+Below are the ports used by PostgresSQL-Server.
+<table>
+  <tr class=plain>
+    <th>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Service Name</th>
+    <th>Port</th>
+    <th>Transport Protocol</th>
+  </tr>
+  <tr>
+    <td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>PostgresSQL-Server</b></td>
+    <td>5432</td>
+    <td>tcp</td>
+  </tr>
+  <tr>
+    <td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>PostgresSQL-Server</b></td>
+    <td>5432</td>
+    <td>udp</td>
+  </tr>
+</table>
