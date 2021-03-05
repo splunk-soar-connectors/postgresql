@@ -8,14 +8,18 @@
     "logo_dark": "logo_postgresql_dark.svg",
     "product_name": "PostgreSQL",
     "product_version_regex": ".*",
-    "publisher": "Phantom",
-    "license": "Copyright (c) 2017-2019 Splunk Inc.",
-    "app_version": "1.0.14",
-    "utctime_updated": "2019-01-04T02:09:23.000000Z",
+    "publisher": "Splunk",
+    "license": "Copyright (c) 2017-2021 Splunk Inc.",
+    "app_version": "2.0.1",
+    "utctime_updated": "2021-03-03T07:19:30.000000Z",
     "package_name": "phantom_postgresql",
-    "main_module": "postgresql_connector.pyc",
-    "min_phantom_version": "4.0.1068",
+    "main_module": "postgresql_connector.py",
+    "min_phantom_version": "4.9.39220",
     "app_wizard_version": "1.0.0",
+    "latest_tested_versions": [
+        "PostgreSQL v8.4.20"
+    ],
+    "python_version": "3",
     "configuration": {
         "host": {
             "description": "Hostname or IP address",
@@ -44,7 +48,6 @@
         "other": {
             "description": "JSON Object of other libpq connection parameters",
             "data_type": "string",
-            "required": false,
             "order": 4
         }
     },
@@ -53,7 +56,6 @@
             "action": "test connectivity",
             "identifier": "test_connectivity",
             "description": "Validate the asset configuration for connectivity using supplied configuration",
-            "verbose": "",
             "type": "test",
             "read_only": true,
             "parameters": {},
@@ -81,14 +83,11 @@
                 "format_vars": {
                     "description": "Comma separated list of variables",
                     "data_type": "string",
-                    "required": false,
-                    "primary": false,
                     "order": 1
                 },
                 "no_commit": {
                     "description": "Do not commit changes to database",
                     "data_type": "boolean",
-                    "required": false,
                     "default": false,
                     "order": 2
                 }
@@ -96,22 +95,29 @@
             "output": [
                 {
                     "data_path": "action_result.status",
-                    "data_type": "string"
+                    "data_type": "string",
+                    "example_values": [
+                        "success",
+                        "failed"
+                    ]
                 },
                 {
                     "data_path": "action_result.parameter.format_vars",
-                    "data_type": "string"
+                    "data_type": "string",
+                    "example_values": "10"
                 },
                 {
                     "data_path": "action_result.parameter.no_commit",
-                    "data_type": "string"
+                    "data_type": "boolean",
+                    "example_values": false
                 },
                 {
                     "data_path": "action_result.parameter.query",
                     "data_type": "string",
                     "contains": [
                         "sql query"
-                    ]
+                    ],
+                    "example_values": "select * from test_table"
                 },
                 {
                     "data_path": "action_result.data",
@@ -127,15 +133,18 @@
                 },
                 {
                     "data_path": "action_result.message",
-                    "data_type": "string"
+                    "data_type": "string",
+                    "example_values": "Successfully ran query"
                 },
                 {
                     "data_path": "summary.total_objects",
-                    "data_type": "numeric"
+                    "data_type": "numeric",
+                    "example_values": 1
                 },
                 {
                     "data_path": "summary.total_objects_successful",
-                    "data_type": "numeric"
+                    "data_type": "numeric",
+                    "example_values": 1
                 }
             ],
             "render": {
@@ -148,7 +157,6 @@
             "action": "list columns",
             "identifier": "list_columns",
             "description": "List the columns of a table",
-            "verbose": "",
             "type": "investigate",
             "read_only": true,
             "parameters": {
@@ -165,8 +173,6 @@
                 "table_schema": {
                     "description": "Table schema",
                     "data_type": "string",
-                    "required": false,
-                    "primary": false,
                     "default": "public",
                     "order": 1
                 }
@@ -176,7 +182,8 @@
                     "data_path": "action_result.status",
                     "data_type": "string",
                     "example_values": [
-                        "success"
+                        "success",
+                        "failed"
                     ]
                 },
                 {
@@ -370,15 +377,15 @@
                 },
                 {
                     "data_path": "action_result.data.*.numeric_precision",
-                    "data_type": "string"
+                    "data_type": "numeric"
                 },
                 {
                     "data_path": "action_result.data.*.numeric_precision_radix",
-                    "data_type": "string"
+                    "data_type": "numeric"
                 },
                 {
                     "data_path": "action_result.data.*.numeric_scale",
-                    "data_type": "string"
+                    "data_type": "numeric"
                 },
                 {
                     "data_path": "action_result.data.*.ordinal_position",
@@ -486,8 +493,6 @@
                 "table_schema": {
                     "description": "Table schema",
                     "data_type": "string",
-                    "required": false,
-                    "primary": false,
                     "default": "public",
                     "order": 0
                 }
@@ -497,7 +502,8 @@
                     "data_path": "action_result.status",
                     "data_type": "string",
                     "example_values": [
-                        "success"
+                        "success",
+                        "failed"
                     ]
                 },
                 {
