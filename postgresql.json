@@ -104,12 +104,16 @@
                 {
                     "data_path": "action_result.parameter.format_vars",
                     "data_type": "string",
-                    "example_values": "10"
+                    "example_values": [
+                        "10"
+                    ]
                 },
                 {
                     "data_path": "action_result.parameter.no_commit",
                     "data_type": "boolean",
-                    "example_values": false
+                    "example_values": [
+                        false
+                    ]
                 },
                 {
                     "data_path": "action_result.parameter.query",
@@ -117,7 +121,9 @@
                     "contains": [
                         "sql query"
                     ],
-                    "example_values": "select * from test_table"
+                    "example_values": [
+                        "select * from test_table"
+                    ]
                 },
                 {
                     "data_path": "action_result.data",
@@ -134,17 +140,23 @@
                 {
                     "data_path": "action_result.message",
                     "data_type": "string",
-                    "example_values": "Successfully ran query"
+                    "example_values": [
+                        "Successfully ran query"
+                    ]
                 },
                 {
                     "data_path": "summary.total_objects",
                     "data_type": "numeric",
-                    "example_values": 1
+                    "example_values": [
+                        1
+                    ]
                 },
                 {
                     "data_path": "summary.total_objects_successful",
                     "data_type": "numeric",
-                    "example_values": 1
+                    "example_values": [
+                        1
+                    ]
                 }
             ],
             "render": {
