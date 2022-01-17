@@ -16,8 +16,8 @@
 #
 # Phantom App imports
 import phantom.app as phantom
-from phantom.base_connector import BaseConnector
 from phantom.action_result import ActionResult
+from phantom.base_connector import BaseConnector
 
 try:
     # Fix Library Import
@@ -51,9 +51,10 @@ except:
 # from postgresql_consts import *
 import csv
 import json
+from datetime import date, datetime
+
 import psycopg2
 import requests
-from datetime import date, datetime
 
 
 class RetVal(tuple):
@@ -271,8 +272,9 @@ class PostgresqlConnector(BaseConnector):
 
 if __name__ == '__main__':
 
-    import pudb
     import argparse
+
+    import pudb
 
     pudb.set_trace()
 
