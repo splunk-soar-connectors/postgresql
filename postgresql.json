@@ -9,12 +9,13 @@
     "product_name": "PostgreSQL",
     "product_version_regex": ".*",
     "publisher": "Splunk",
-    "license": "Copyright (c) 2017-2021 Splunk Inc.",
-    "app_version": "2.0.13",
-    "utctime_updated": "2021-10-15T07:12:26.000000Z",
+    "license": "Copyright (c) 2017-2022 Splunk Inc.",
+    "app_version": "2.0.16",
+    "utctime_updated": "2022-01-28T22:51:30.000000Z",
     "package_name": "phantom_postgresql",
     "main_module": "postgresql_connector.py",
-    "min_phantom_version": "4.9.39220",
+    "min_phantom_version": "5.1.0",
+    "fips_compliant": true,
     "app_wizard_version": "1.0.0",
     "latest_tested_versions": [
         "PostgreSQL v8.4.20"
@@ -633,5 +634,33 @@
             },
             "versions": "EQ(*)"
         }
-    ]
+    ],
+    "pip_dependencies": {
+        "wheel": [
+            {
+                "module": "certifi",
+                "input_file": "wheels/certifi-2021.10.8-py2.py3-none-any.whl"
+            },
+            {
+                "module": "chardet",
+                "input_file": "wheels/chardet-3.0.4-py2.py3-none-any.whl"
+            },
+            {
+                "module": "idna",
+                "input_file": "wheels/idna-2.10-py2.py3-none-any.whl"
+            },
+            {
+                "module": "psycopg2_binary",
+                "input_file": "wheels/psycopg2_binary-2.8.5-cp36-cp36m-manylinux1_x86_64.whl"
+            },
+            {
+                "module": "requests",
+                "input_file": "wheels/requests-2.25.0-py2.py3-none-any.whl"
+            },
+            {
+                "module": "urllib3",
+                "input_file": "wheels/urllib3-1.26.7-py2.py3-none-any.whl"
+            }
+        ]
+    }
 }
