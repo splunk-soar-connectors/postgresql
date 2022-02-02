@@ -2,7 +2,7 @@
 # PostgreSQL
 
 Publisher: Splunk  
-Connector Version: 2\.0\.16  
+Connector Version: 2\.0\.17  
 Product Vendor: PostgreSQL  
 Product Name: PostgreSQL  
 Product Version Supported (regex): "\.\*"  
