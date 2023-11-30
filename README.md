@@ -2,11 +2,11 @@
 # PostgreSQL
 
 Publisher: Splunk  
-Connector Version: 2\.0\.17  
+Connector Version: 2.0.18  
 Product Vendor: PostgreSQL  
 Product Name: PostgreSQL  
-Product Version Supported (regex): "\.\*"  
-Minimum Product Version: 5\.1\.0  
+Product Version Supported (regex): ".\*"  
+Minimum Product Version: 5.1.0  
 
 This app supports investigative actions against a PostgreSQL database
 
@@ -79,28 +79,28 @@ Run a query against a table or tables in the database
 Type: **investigate**  
 Read only: **False**
 
-It is recommended to use the <b>format\_vars</b> parameter when applicable\. For example, if you wanted to find a specific IP, you could set the <b>query</b> to a formatted string, like "select \* from my\_hosts where ip = %s" \(note the use of %s\), and set <b>format\_vars</b> to the IP address\. This will ensure the inputs are safely sanitized and avoid SQL injection attacks\. Regardless of the type of input it's expecting, the only format specifier which should be used is %s\.<br>Setting <b>no\_commit</b> will make it so the App does not commit any changes made to the database \(so you can ensure it's a read only query\)\.<br><br>The <b>format\_vars</b> parameter accepts a comma seperated list\. You can escape commas by surrounding them in double quotes, and escape double quotes with a backslash\. Assuming you have a list of values for the format vars, you can employ this code in your playbooks to properly format it into a string\:<br> <code>format\_vars\_str = ','\.join\(\['"\{\}"'\.format\(str\(x\)\.replace\('\\\\', '\\\\\\\\'\)\.replace\('"', '\\\\"'\)\) for x in format\_vars\_list\]\)</code>\.
+It is recommended to use the <b>format_vars</b> parameter when applicable. For example, if you wanted to find a specific IP, you could set the <b>query</b> to a formatted string, like "select \* from my_hosts where ip = %s" (note the use of %s), and set <b>format_vars</b> to the IP address. This will ensure the inputs are safely sanitized and avoid SQL injection attacks. Regardless of the type of input it's expecting, the only format specifier which should be used is %s.<br>Setting <b>no_commit</b> will make it so the App does not commit any changes made to the database (so you can ensure it's a read only query).<br><br>The <b>format_vars</b> parameter accepts a comma seperated list. You can escape commas by surrounding them in double quotes, and escape double quotes with a backslash. Assuming you have a list of values for the format vars, you can employ this code in your playbooks to properly format it into a string:<br> <code>format_vars_str = ','.join(['"{}"'.format(str(x).replace('\\\\', '\\\\\\\\').replace('"', '\\\\"')) for x in format_vars_list])</code>.
 
 #### Action Parameters
 PARAMETER | REQUIRED | DESCRIPTION | TYPE | CONTAINS
 --------- | -------- | ----------- | ---- | --------
 **query** |  required  | Query string | string |  `sql query` 
-**format\_vars** |  optional  | Comma separated list of variables | string | 
-**no\_commit** |  optional  | Do not commit changes to database | boolean | 
+**format_vars** |  optional  | Comma separated list of variables | string | 
+**no_commit** |  optional  | Do not commit changes to database | boolean | 
 
 #### Action Output
-DATA PATH | TYPE | CONTAINS
---------- | ---- | --------
-action\_result\.status | string | 
-action\_result\.parameter\.format\_vars | string | 
-action\_result\.parameter\.no\_commit | boolean | 
-action\_result\.parameter\.query | string |  `sql query` 
-action\_result\.data | string | 
-action\_result\.summary | string | 
-action\_result\.summary\.total\_rows | numeric | 
-action\_result\.message | string | 
-summary\.total\_objects | numeric | 
-summary\.total\_objects\_successful | numeric |   
+DATA PATH | TYPE | CONTAINS | EXAMPLE VALUES
+--------- | ---- | -------- | --------------
+action_result.status | string |  |   success  failed 
+action_result.parameter.format_vars | string |  |   10 
+action_result.parameter.no_commit | boolean |  |   False 
+action_result.parameter.query | string |  `sql query`  |   select \* from test_table 
+action_result.data | string |  |  
+action_result.summary | string |  |  
+action_result.summary.total_rows | numeric |  |  
+action_result.message | string |  |   Successfully ran query 
+summary.total_objects | numeric |  |   1 
+summary.total_objects_successful | numeric |  |   1   
 
 ## action: 'list columns'
 List the columns of a table
@@ -111,64 +111,64 @@ Read only: **True**
 #### Action Parameters
 PARAMETER | REQUIRED | DESCRIPTION | TYPE | CONTAINS
 --------- | -------- | ----------- | ---- | --------
-**table\_name** |  required  | Name of table | string |  `postgres table name` 
-**table\_schema** |  optional  | Table schema | string | 
+**table_name** |  required  | Name of table | string |  `postgres table name` 
+**table_schema** |  optional  | Table schema | string | 
 
 #### Action Output
-DATA PATH | TYPE | CONTAINS
---------- | ---- | --------
-action\_result\.status | string | 
-action\_result\.parameter\.table\_name | string |  `postgres table name` 
-action\_result\.parameter\.table\_schema | string | 
-action\_result\.data | string | 
-action\_result\.data\.\*\.character\_maximum\_length | numeric | 
-action\_result\.data\.\*\.character\_octet\_length | numeric | 
-action\_result\.data\.\*\.character\_set\_catalog | string | 
-action\_result\.data\.\*\.character\_set\_name | string | 
-action\_result\.data\.\*\.character\_set\_schema | string | 
-action\_result\.data\.\*\.collation\_catalog | string | 
-action\_result\.data\.\*\.collation\_name | string | 
-action\_result\.data\.\*\.collation\_schema | string | 
-action\_result\.data\.\*\.column\_default | string | 
-action\_result\.data\.\*\.column\_name | string | 
-action\_result\.data\.\*\.data\_type | string | 
-action\_result\.data\.\*\.datetime\_precision | string | 
-action\_result\.data\.\*\.domain\_catalog | string |  `domain` 
-action\_result\.data\.\*\.domain\_name | string |  `domain` 
-action\_result\.data\.\*\.domain\_schema | string |  `domain` 
-action\_result\.data\.\*\.dtd\_identifier | string | 
-action\_result\.data\.\*\.generation\_expression | string | 
-action\_result\.data\.\*\.identity\_cycle | string | 
-action\_result\.data\.\*\.identity\_generation | string | 
-action\_result\.data\.\*\.identity\_increment | string | 
-action\_result\.data\.\*\.identity\_maximum | string | 
-action\_result\.data\.\*\.identity\_minimum | string | 
-action\_result\.data\.\*\.identity\_start | string | 
-action\_result\.data\.\*\.interval\_precision | string | 
-action\_result\.data\.\*\.interval\_type | string | 
-action\_result\.data\.\*\.is\_generated | string | 
-action\_result\.data\.\*\.is\_identity | string | 
-action\_result\.data\.\*\.is\_nullable | string | 
-action\_result\.data\.\*\.is\_self\_referencing | string | 
-action\_result\.data\.\*\.is\_updatable | string | 
-action\_result\.data\.\*\.maximum\_cardinality | string | 
-action\_result\.data\.\*\.numeric\_precision | numeric | 
-action\_result\.data\.\*\.numeric\_precision\_radix | numeric | 
-action\_result\.data\.\*\.numeric\_scale | numeric | 
-action\_result\.data\.\*\.ordinal\_position | numeric | 
-action\_result\.data\.\*\.scope\_catalog | string | 
-action\_result\.data\.\*\.scope\_name | string | 
-action\_result\.data\.\*\.scope\_schema | string | 
-action\_result\.data\.\*\.table\_catalog | string | 
-action\_result\.data\.\*\.table\_name | string |  `postgres table name` 
-action\_result\.data\.\*\.table\_schema | string | 
-action\_result\.data\.\*\.udt\_catalog | string | 
-action\_result\.data\.\*\.udt\_name | string | 
-action\_result\.data\.\*\.udt\_schema | string | 
-action\_result\.summary | string | 
-action\_result\.message | string | 
-summary\.total\_objects | numeric | 
-summary\.total\_objects\_successful | numeric |   
+DATA PATH | TYPE | CONTAINS | EXAMPLE VALUES
+--------- | ---- | -------- | --------------
+action_result.status | string |  |   success  failed 
+action_result.parameter.table_name | string |  `postgres table name`  |   users 
+action_result.parameter.table_schema | string |  |   myschema 
+action_result.data | string |  |  
+action_result.data.\*.character_maximum_length | numeric |  |   32 
+action_result.data.\*.character_octet_length | numeric |  |  
+action_result.data.\*.character_set_catalog | string |  |  
+action_result.data.\*.character_set_name | string |  |  
+action_result.data.\*.character_set_schema | string |  |  
+action_result.data.\*.collation_catalog | string |  |  
+action_result.data.\*.collation_name | string |  |  
+action_result.data.\*.collation_schema | string |  |  
+action_result.data.\*.column_default | string |  |  
+action_result.data.\*.column_name | string |  |   user_name 
+action_result.data.\*.data_type | string |  |   character 
+action_result.data.\*.datetime_precision | string |  |  
+action_result.data.\*.domain_catalog | string |  `domain`  |  
+action_result.data.\*.domain_name | string |  `domain`  |  
+action_result.data.\*.domain_schema | string |  `domain`  |  
+action_result.data.\*.dtd_identifier | string |  |   1 
+action_result.data.\*.generation_expression | string |  |  
+action_result.data.\*.identity_cycle | string |  |  
+action_result.data.\*.identity_generation | string |  |  
+action_result.data.\*.identity_increment | string |  |  
+action_result.data.\*.identity_maximum | string |  |  
+action_result.data.\*.identity_minimum | string |  |  
+action_result.data.\*.identity_start | string |  |  
+action_result.data.\*.interval_precision | string |  |  
+action_result.data.\*.interval_type | string |  |  
+action_result.data.\*.is_generated | string |  |   NEVER 
+action_result.data.\*.is_identity | string |  |   NO 
+action_result.data.\*.is_nullable | string |  |   YES 
+action_result.data.\*.is_self_referencing | string |  |   NO 
+action_result.data.\*.is_updatable | string |  |   YES 
+action_result.data.\*.maximum_cardinality | string |  |  
+action_result.data.\*.numeric_precision | numeric |  |  
+action_result.data.\*.numeric_precision_radix | numeric |  |  
+action_result.data.\*.numeric_scale | numeric |  |  
+action_result.data.\*.ordinal_position | numeric |  |   1 
+action_result.data.\*.scope_catalog | string |  |  
+action_result.data.\*.scope_name | string |  |  
+action_result.data.\*.scope_schema | string |  |  
+action_result.data.\*.table_catalog | string |  |   postgres 
+action_result.data.\*.table_name | string |  `postgres table name`  |   users 
+action_result.data.\*.table_schema | string |  |   public 
+action_result.data.\*.udt_catalog | string |  |   postgres 
+action_result.data.\*.udt_name | string |  |   bpchar 
+action_result.data.\*.udt_schema | string |  |   pg_catalog 
+action_result.summary | string |  |  
+action_result.message | string |  |   Successfully listed all columns 
+summary.total_objects | numeric |  |   1 
+summary.total_objects_successful | numeric |  |   1   
 
 ## action: 'list tables'
 List the tables in the database
@@ -176,32 +176,32 @@ List the tables in the database
 Type: **investigate**  
 Read only: **True**
 
-Describes the structure of a table in the database by displaying information about its columns\. The only tables which it will be able to query for must have a name composed of only alphanumeric characters \+ '\_' and '$'\.
+Describes the structure of a table in the database by displaying information about its columns. The only tables which it will be able to query for must have a name composed of only alphanumeric characters + '_' and '$'.
 
 #### Action Parameters
 PARAMETER | REQUIRED | DESCRIPTION | TYPE | CONTAINS
 --------- | -------- | ----------- | ---- | --------
-**table\_schema** |  optional  | Table schema | string | 
+**table_schema** |  optional  | Table schema | string | 
 
 #### Action Output
-DATA PATH | TYPE | CONTAINS
---------- | ---- | --------
-action\_result\.status | string | 
-action\_result\.parameter\.table\_schema | string | 
-action\_result\.data | string | 
-action\_result\.data\.\*\.commit\_action | string | 
-action\_result\.data\.\*\.is\_insertable\_into | string | 
-action\_result\.data\.\*\.is\_typed | string | 
-action\_result\.data\.\*\.reference\_generation | string | 
-action\_result\.data\.\*\.self\_referencing\_column\_name | string | 
-action\_result\.data\.\*\.table\_catalog | string | 
-action\_result\.data\.\*\.table\_name | string |  `postgres table name` 
-action\_result\.data\.\*\.table\_schema | string | 
-action\_result\.data\.\*\.table\_type | string | 
-action\_result\.data\.\*\.user\_defined\_type\_catalog | string | 
-action\_result\.data\.\*\.user\_defined\_type\_name | string | 
-action\_result\.data\.\*\.user\_defined\_type\_schema | string | 
-action\_result\.summary | string | 
-action\_result\.message | string | 
-summary\.total\_objects | numeric | 
-summary\.total\_objects\_successful | numeric | 
+DATA PATH | TYPE | CONTAINS | EXAMPLE VALUES
+--------- | ---- | -------- | --------------
+action_result.status | string |  |   success  failed 
+action_result.parameter.table_schema | string |  |   myschema 
+action_result.data | string |  |  
+action_result.data.\*.commit_action | string |  |  
+action_result.data.\*.is_insertable_into | string |  |   YES 
+action_result.data.\*.is_typed | string |  |   NO 
+action_result.data.\*.reference_generation | string |  |  
+action_result.data.\*.self_referencing_column_name | string |  |  
+action_result.data.\*.table_catalog | string |  |   postgres 
+action_result.data.\*.table_name | string |  `postgres table name`  |   users 
+action_result.data.\*.table_schema | string |  |   public 
+action_result.data.\*.table_type | string |  |   BASE TABLE 
+action_result.data.\*.user_defined_type_catalog | string |  |  
+action_result.data.\*.user_defined_type_name | string |  |  
+action_result.data.\*.user_defined_type_schema | string |  |  
+action_result.summary | string |  |  
+action_result.message | string |  |   Successfully listed all tables 
+summary.total_objects | numeric |  |   1 
+summary.total_objects_successful | numeric |  |   1 
