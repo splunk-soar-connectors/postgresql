@@ -1,6 +1,6 @@
 # File: postgresql_connector.py
 #
-# Copyright (c) 2017-2022 Splunk Inc.
+# Copyright (c) 2017-2024 Splunk Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -134,10 +134,14 @@ class PostgresqlConnector(BaseConnector):
         return format_vars
 
     def _handle_run_query(self, param):
+
+        self.save_progress("In action handler for: {0}".format(self.get_action_identifier()))
+
         action_result = self.add_action_result(ActionResult(dict(param)))
         query = param['query']
         format_vars = self._get_format_vars(param)
         try:
+            self.debug_print("Executing query")
             self._cursor.execute(query, format_vars)
         except Exception as e:
             return action_result.set_status(
@@ -181,6 +185,9 @@ class PostgresqlConnector(BaseConnector):
         return action_result.set_status(phantom.APP_SUCCESS, "Successfully ran query")
 
     def _handle_list_columns(self, param):
+
+        self.save_progress("In action handler for: {0}".format(self.get_action_identifier()))
+
         action_result = self.add_action_result(ActionResult(dict(param)))
         table_name = param['table_name']
         table_schema = param.get('table_schema', 'public')
@@ -201,6 +208,7 @@ class PostgresqlConnector(BaseConnector):
         # Check the columns
         query = "SELECT * FROM INFORMATION_SCHEMA.COLUMNS where table_name = %s and table_schema = %s;"
         try:
+            self.debug_print("Executing query")
             self._cursor.execute(query, (table_name, table_schema))
         except Exception as e:
             return action_result.set_status(
@@ -215,6 +223,9 @@ class PostgresqlConnector(BaseConnector):
         return action_result.set_status(phantom.APP_SUCCESS, "Successfully listed all columns")
 
     def _handle_list_tables(self, param):
+
+        self.save_progress("In action handler for: {0}".format(self.get_action_identifier()))
+
         action_result = self.add_action_result(ActionResult(dict(param)))
         table_schema = param.get('table_schema', 'public')
 
@@ -234,6 +245,7 @@ class PostgresqlConnector(BaseConnector):
         # Check for tables
         query = "select * from information_schema.tables where table_schema = %s;"
         try:
+            self.debug_print("Executing query")
             self._cursor.execute(query, (table_schema,))
         except Exception as e:
             return action_result.set_status(
