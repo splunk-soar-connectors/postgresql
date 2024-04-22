@@ -666,24 +666,8 @@
     "pip39_dependencies": {
         "wheel": [
             {
-                "module": "asn1crypto",
-                "input_file": "wheels/shared/asn1crypto-1.5.1-py2.py3-none-any.whl"
-            },
-            {
-                "module": "pg8000",
-                "input_file": "wheels/py3/pg8000-1.31.1-py3-none-any.whl"
-            },
-            {
-                "module": "python_dateutil",
-                "input_file": "wheels/shared/python_dateutil-2.9.0.post0-py2.py3-none-any.whl"
-            },
-            {
-                "module": "scramp",
-                "input_file": "wheels/py3/scramp-1.4.5-py3-none-any.whl"
-            },
-            {
-                "module": "six",
-                "input_file": "wheels/shared/six-1.16.0-py2.py3-none-any.whl"
+                "module": "psycopg_binary",
+                "input_file": "wheels/py39/psycopg_binary-3.1.18-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl"
             }
         ]
     }
