@@ -10,7 +10,7 @@
     "product_version_regex": ".*",
     "publisher": "Splunk",
     "license": "Copyright (c) 2017-2024 Splunk Inc.",
-    "app_version": "2.0.18",
+    "app_version": "2.0.19",
     "utctime_updated": "2022-02-02T18:16:43.000000Z",
     "package_name": "phantom_postgresql",
     "main_module": "postgresql_connector.py",
@@ -636,19 +636,9 @@
         }
     ],
     "pip_dependencies": {
-        "wheel": [
-            {
-                "module": "psycopg2_binary",
-                "input_file": "wheels/py36/psycopg2_binary-2.8.5-cp36-cp36m-manylinux1_x86_64.whl"
-            }
-        ]
+        "wheel": []
     },
     "pip39_dependencies": {
-        "wheel": [
-            {
-                "module": "psycopg2_binary",
-                "input_file": "wheels/py39/psycopg2_binary-2.8.5-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl"
-            }
-        ]
+        "wheel": []
     }
 }
