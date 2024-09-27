@@ -634,21 +634,5 @@
             },
             "versions": "EQ(*)"
         }
-    ],
-    "pip_dependencies": {
-        "wheel": [
-            {
-                "module": "psycopg2_binary",
-                "input_file": "wheels/py36/psycopg2_binary-2.8.5-cp36-cp36m-manylinux1_x86_64.whl"
-            }
-        ]
-    },
-    "pip39_dependencies": {
-        "wheel": [
-            {
-                "module": "psycopg2_binary",
-                "input_file": "wheels/py39/psycopg2_binary-2.8.5-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl"
-            }
-        ]
-    }
+    ]
 }
