@@ -2,11 +2,11 @@
 # PostgreSQL
 
 Publisher: Splunk  
-Connector Version: 2.0.18  
+Connector Version: 2.0.19  
 Product Vendor: PostgreSQL  
 Product Name: PostgreSQL  
 Product Version Supported (regex): ".\*"  
-Minimum Product Version: 5.1.0  
+Minimum Product Version: 6.2.1  
 
 This app supports investigative actions against a PostgreSQL database
 
