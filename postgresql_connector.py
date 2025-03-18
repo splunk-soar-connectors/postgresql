@@ -1,6 +1,6 @@
 # File: postgresql_connector.py
 #
-# Copyright (c) 2017-2024 Splunk Inc.
+# Copyright (c) 2017-2025 Splunk Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@ from phantom.action_result import ActionResult
 from phantom.base_connector import BaseConnector
 
 from postgresql_consts import *
+
 
 try:
     # Fix Library Import
@@ -66,9 +67,8 @@ class RetVal(tuple):
 
 
 class PostgresqlConnector(BaseConnector):
-
     def __init__(self):
-        super(PostgresqlConnector, self).__init__()
+        super().__init__()
 
     def _initialize_error(self, msg, exception=None):
         if self.get_action_identifier() == "test_connectivity":
@@ -117,7 +117,7 @@ class PostgresqlConnector(BaseConnector):
             return action_result.set_status(phantom.APP_ERROR, "Test Connectivity Failed", e)
 
         for row in self._cursor:
-            self.save_progress("Using: {}".format(row))
+            self.save_progress(f"Using: {row}")
 
         self.save_progress("Test Connectivity Passed")
         return action_result.set_status(phantom.APP_SUCCESS)
@@ -129,8 +129,7 @@ class PostgresqlConnector(BaseConnector):
         return format_vars
 
     def _handle_run_query(self, param):
-
-        self.save_progress("In action handler for: {0}".format(self.get_action_identifier()))
+        self.save_progress(f"In action handler for: {self.get_action_identifier()}")
 
         action_result = self.add_action_result(ActionResult(dict(param)))
         query = param["query"]
@@ -161,7 +160,7 @@ class PostgresqlConnector(BaseConnector):
                 result.append(info)
         except Exception as e:
             # This probably means it was a query like an insert or something that didn't return any rows
-            self.debug_print("Unable to retrieve results from query: {}".format(str(e)))
+            self.debug_print(f"Unable to retrieve results from query: {e!s}")
             result = []
 
         for row in result:
@@ -176,8 +175,7 @@ class PostgresqlConnector(BaseConnector):
         return action_result.set_status(phantom.APP_SUCCESS, "Successfully ran query")
 
     def _handle_list_columns(self, param):
-
-        self.save_progress("In action handler for: {0}".format(self.get_action_identifier()))
+        self.save_progress(f"In action handler for: {self.get_action_identifier()}")
 
         action_result = self.add_action_result(ActionResult(dict(param)))
         table_name = param["table_name"]
@@ -210,8 +208,7 @@ class PostgresqlConnector(BaseConnector):
         return action_result.set_status(phantom.APP_SUCCESS, "Successfully listed all columns")
 
     def _handle_list_tables(self, param):
-
-        self.save_progress("In action handler for: {0}".format(self.get_action_identifier()))
+        self.save_progress(f"In action handler for: {self.get_action_identifier()}")
 
         action_result = self.add_action_result(ActionResult(dict(param)))
         table_schema = param.get("table_schema", "public")
@@ -244,7 +241,6 @@ class PostgresqlConnector(BaseConnector):
         return action_result.set_status(phantom.APP_SUCCESS, "Successfully listed all tables")
 
     def handle_action(self, param):
-
         ret_val = phantom.APP_SUCCESS
 
         # Get the action that we are supposed to execute for this App Run
@@ -268,7 +264,6 @@ class PostgresqlConnector(BaseConnector):
 
 
 if __name__ == "__main__":
-
     import argparse
     import sys
 
@@ -291,7 +286,6 @@ if __name__ == "__main__":
     verify = args.verify
 
     if username is not None and password is None:
-
         # User specified a username but not a password, so ask
         import getpass
 
@@ -317,7 +311,7 @@ if __name__ == "__main__":
             r2 = requests.post(login_url, verify=verify, data=data, headers=headers, timeout=DEFAULT_TIMEOUT)
             session_id = r2.cookies["sessionid"]
         except Exception as e:
-            print("Unable to get session id from the platfrom. Error: {}".format(str(e)))
+            print(f"Unable to get session id from the platfrom. Error: {e!s}")
             sys.exit(1)
 
     with open(args.input_test_json) as f:
