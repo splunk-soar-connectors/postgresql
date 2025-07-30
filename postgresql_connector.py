@@ -27,10 +27,7 @@ try:
     # NOTE: These need to be loaded in this order
     from ctypes import cdll
 
-    if hasattr(BaseConnector, "get_phantom_home"):
-        home_dir = BaseConnector._get_phantom_home()
-    else:
-        home_dir = "/opt/phantom"
+    home_dir = BaseConnector._get_phantom_home() if hasattr(BaseConnector, "get_phantom_home") else "/opt/phantom"
     cdll.LoadLibrary(home_dir + "/usr/lib64/python2.7/site-packages/psycopg2/.libs/libkeyutils-1-ff31573b.2.so")
     cdll.LoadLibrary(home_dir + "/usr/lib64/python2.7/site-packages/psycopg2/.libs/libresolv-2-c4c53def.5.so")
     cdll.LoadLibrary(home_dir + "/usr/lib64/python2.7/site-packages/psycopg2/.libs/libsepol-b4f5b513.so.1")
