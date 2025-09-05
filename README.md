@@ -1,7 +1,7 @@
 # PostgreSQL
 
 Publisher: Splunk <br>
-Connector Version: 2.0.19 <br>
+Connector Version: 2.0.20 <br>
 Product Vendor: PostgreSQL <br>
 Product Name: PostgreSQL <br>
 Minimum Product Version: 6.2.1
