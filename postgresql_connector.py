@@ -93,6 +93,10 @@ class PostgresqlConnector(BaseConnector):
         else:
             other_dict = {}
 
+        other_dict["sslmode"] = "verify-full" if config.get("verify_server_cert", True) else "require"
+        if ssl_root_cert := config.get("ssl_root_cert"):
+            other_dict["sslrootcert"] = ssl_root_cert
+
         try:
             self._connection = psycopg2.connect(user=username, password=password, dbname=database, host=host, **other_dict)
             self._cursor = self._connection.cursor()

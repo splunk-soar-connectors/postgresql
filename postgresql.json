@@ -50,6 +50,17 @@
             "description": "JSON Object of other libpq connection parameters",
             "data_type": "string",
             "order": 4
+        },
+        "verify_server_cert": {
+            "description": "Verify the PostgreSQL server certificate and hostname",
+            "data_type": "boolean",
+            "default": true,
+            "order": 5
+        },
+        "ssl_root_cert": {
+            "description": "Path to a PEM file containing trusted certificate authority certificates. When omitted, libpq uses its default root certificate file",
+            "data_type": "string",
+            "order": 6
         }
     },
     "actions": [

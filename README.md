@@ -38,6 +38,8 @@ VARIABLE | REQUIRED | TYPE | DESCRIPTION
 **password** | required | password | Password |
 **database** | required | string | Database |
 **other** | optional | string | JSON Object of other libpq connection parameters |
+**verify_server_cert** | optional | boolean | Verify the PostgreSQL server certificate and hostname |
+**ssl_root_cert** | optional | string | Path to a PEM file containing trusted certificate authority certificates. When omitted, libpq uses its default root certificate file |
 
 ### Supported Actions
 
