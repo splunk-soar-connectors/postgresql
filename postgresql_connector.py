@@ -1,6 +1,6 @@
 # File: postgresql_connector.py
 #
-# Copyright (c) 2017-2025 Splunk Inc.
+# Copyright (c) 2017-2026 Splunk Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -92,6 +92,10 @@ class PostgresqlConnector(BaseConnector):
                 return self._initialize_error("'other' is invalid", e)
         else:
             other_dict = {}
+
+        other_dict["sslmode"] = "verify-full" if config.get("verify_server_cert", True) else "require"
+        if ssl_root_cert := config.get("ssl_root_cert"):
+            other_dict["sslrootcert"] = ssl_root_cert
 
         try:
             self._connection = psycopg2.connect(user=username, password=password, dbname=database, host=host, **other_dict)

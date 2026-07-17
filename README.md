@@ -38,6 +38,8 @@ VARIABLE | REQUIRED | TYPE | DESCRIPTION
 **password** | required | password | Password |
 **database** | required | string | Database |
 **other** | optional | string | JSON Object of other libpq connection parameters |
+**verify_server_cert** | optional | boolean | Verify the PostgreSQL server certificate and hostname |
+**ssl_root_cert** | optional | string | Path to a PEM file containing trusted certificate authority certificates. When omitted, libpq uses its default root certificate file |
 
 ### Supported Actions
 
@@ -207,7 +209,7 @@ ______________________________________________________________________
 
 Auto-generated Splunk SOAR Connector documentation.
 
-Copyright 2025 Splunk Inc.
+Copyright 2026 Splunk Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.

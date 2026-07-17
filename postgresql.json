@@ -9,7 +9,7 @@
     "product_name": "PostgreSQL",
     "product_version_regex": ".*",
     "publisher": "Splunk",
-    "license": "Copyright (c) 2017-2025 Splunk Inc.",
+    "license": "Copyright (c) 2017-2026 Splunk Inc.",
     "app_version": "2.0.20",
     "utctime_updated": "2025-09-05T16:19:44.038323Z",
     "package_name": "phantom_postgresql",
@@ -50,6 +50,17 @@
             "description": "JSON Object of other libpq connection parameters",
             "data_type": "string",
             "order": 4
+        },
+        "verify_server_cert": {
+            "description": "Verify the PostgreSQL server certificate and hostname",
+            "data_type": "boolean",
+            "default": true,
+            "order": 5
+        },
+        "ssl_root_cert": {
+            "description": "Path to a PEM file containing trusted certificate authority certificates. When omitted, libpq uses its default root certificate file",
+            "data_type": "string",
+            "order": 6
         }
     },
     "actions": [
