@@ -147,22 +147,22 @@ class PostgresqlConnector(BaseConnector):
             except Exception as e:
                 return action_result.set_status(phantom.APP_ERROR, "Unable to commit changes", e)
 
-        # Transform output to include column names
-        try:
-            columns = self._cursor.description
-
-            result = []
-            for value in self._cursor.fetchall():
-                info = {}
-                for index, column in enumerate(value):
-                    if isinstance(column, (datetime, date)):
-                        column = column.isoformat()
-                    info[columns[index][0]] = column
-                result.append(info)
-        except Exception as e:
-            # This probably means it was a query like an insert or something that didn't return any rows
-            self.debug_print(f"Unable to retrieve results from query: {e!s}")
-            result = []
+        # DB-API uses a missing description to indicate that the statement did
+        # not return rows. Exceptions while fetching a real result set must not
+        # be reported as an empty success.
+        columns = self._cursor.description
+        result = []
+        if columns is not None:
+            try:
+                for value in self._cursor.fetchall():
+                    info = {}
+                    for index, column in enumerate(value):
+                        if isinstance(column, (datetime, date)):
+                            column = column.isoformat()
+                        info[columns[index][0]] = column
+                    result.append(info)
+            except Exception as e:
+                return action_result.set_status(phantom.APP_ERROR, "Unable to retrieve results from query", e)
 
         for row in result:
             action_result.add_data(row)
