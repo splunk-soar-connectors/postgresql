@@ -129,6 +129,21 @@ class PostgresqlConnector(BaseConnector):
             format_vars = next(csv.reader([format_vars], quotechar='"', skipinitialspace=True, escapechar="\\"))
         return format_vars
 
+    @staticmethod
+    def _deduplicate_column_names(columns):
+        names = []
+        used = set()
+        for index, column in enumerate(columns):
+            base_name = column[0] or f"column_{index}"
+            name = base_name
+            suffix = index
+            while name in used:
+                name = f"{base_name}__duplicate_{suffix}"
+                suffix += 1
+            names.append(name)
+            used.add(name)
+        return names
+
     def _handle_run_query(self, param):
         self.save_progress(f"In action handler for: {self.get_action_identifier()}")
 
@@ -147,22 +162,23 @@ class PostgresqlConnector(BaseConnector):
             except Exception as e:
                 return action_result.set_status(phantom.APP_ERROR, "Unable to commit changes", e)
 
-        # Transform output to include column names
-        try:
-            columns = self._cursor.description
-
-            result = []
-            for value in self._cursor.fetchall():
-                info = {}
-                for index, column in enumerate(value):
-                    if isinstance(column, (datetime, date)):
-                        column = column.isoformat()
-                    info[columns[index][0]] = column
-                result.append(info)
-        except Exception as e:
-            # This probably means it was a query like an insert or something that didn't return any rows
-            self.debug_print(f"Unable to retrieve results from query: {e!s}")
-            result = []
+        # DB-API uses a missing description to indicate that the statement did
+        # not return rows. Exceptions while fetching a real result set must not
+        # be reported as an empty success.
+        columns = self._cursor.description
+        result = []
+        if columns is not None:
+            try:
+                column_names = self._deduplicate_column_names(columns)
+                for value in self._cursor.fetchall():
+                    info = {}
+                    for index, column in enumerate(value):
+                        if isinstance(column, (datetime, date)):
+                            column = column.isoformat()
+                        info[column_names[index]] = column
+                    result.append(info)
+            except Exception as e:
+                return action_result.set_status(phantom.APP_ERROR, "Unable to retrieve results from query", e)
 
         for row in result:
             action_result.add_data(row)
@@ -201,8 +217,8 @@ class PostgresqlConnector(BaseConnector):
         except Exception as e:
             return action_result.set_status(phantom.APP_ERROR, "Error listing columns", e)
 
-        columns = self._cursor.description
-        result = [{columns[index][0]: column for index, column in enumerate(value)} for value in self._cursor.fetchall()]
+        columns = self._deduplicate_column_names(self._cursor.description)
+        result = [{columns[index]: column for index, column in enumerate(value)} for value in self._cursor.fetchall()]
 
         for row in result:
             action_result.add_data(row)
@@ -234,8 +250,8 @@ class PostgresqlConnector(BaseConnector):
             return action_result.set_status(phantom.APP_ERROR, "Error listing tables", e)
 
         # Transform output to include column names
-        columns = self._cursor.description
-        result = [{columns[index][0]: column for index, column in enumerate(value)} for value in self._cursor.fetchall()]
+        columns = self._deduplicate_column_names(self._cursor.description)
+        result = [{columns[index]: column for index, column in enumerate(value)} for value in self._cursor.fetchall()]
 
         for row in result:
             action_result.add_data(row)
