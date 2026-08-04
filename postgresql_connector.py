@@ -85,13 +85,12 @@ class PostgresqlConnector(BaseConnector):
     def __init__(self):
         super().__init__()
 
-    def _initialize_error(self, msg, exception=None):
+    def _initialize_error(self, msg):
         if self.get_action_identifier() == "test_connectivity":
             self.save_progress(msg)
-            self.save_progress(str(exception))
             self.set_status(phantom.APP_ERROR, "Test Connectivity Failed")
         else:
-            self.set_status(phantom.APP_ERROR, msg, exception)
+            self.set_status(phantom.APP_ERROR, msg)
         return phantom.APP_ERROR
 
     def initialize(self):
@@ -106,8 +105,8 @@ class PostgresqlConnector(BaseConnector):
         if other:
             try:
                 other_dict = json.loads(other)
-            except Exception as e:
-                return self._initialize_error("'other' is invalid", e)
+            except Exception:
+                return self._initialize_error("'other' is invalid")
             if not isinstance(other_dict, dict):
                 return self._initialize_error("'other' must be a JSON object")
         else:
@@ -129,8 +128,8 @@ class PostgresqlConnector(BaseConnector):
 
             self._connection = psycopg2.connect(user=username, password=password, dbname=database, host=host, **other_dict)
             self._cursor = self._connection.cursor()
-        except Exception as e:
-            return self._initialize_error("db login error", e)
+        except Exception:
+            return self._initialize_error("Database connection failed")
         finally:
             if ssl_root_cert_file:
                 ssl_root_cert_file.close()
