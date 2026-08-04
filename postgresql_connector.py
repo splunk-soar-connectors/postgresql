@@ -52,6 +52,7 @@ except:
 # from postgresql_consts import *
 import csv
 import json
+import tempfile
 from datetime import date, datetime
 
 import psycopg2
@@ -61,6 +62,23 @@ import requests
 class RetVal(tuple):
     def __new__(cls, val1, val2):
         return tuple.__new__(RetVal, (val1, val2))
+
+
+ALLOWED_OTHER_OPTIONS = frozenset(
+    {
+        "application_name",
+        "client_encoding",
+        "connect_timeout",
+        "keepalives",
+        "keepalives_count",
+        "keepalives_idle",
+        "keepalives_interval",
+        "options",
+        "port",
+        "sslmode",
+        "target_session_attrs",
+    }
+)
 
 
 class PostgresqlConnector(BaseConnector):
@@ -90,18 +108,32 @@ class PostgresqlConnector(BaseConnector):
                 other_dict = json.loads(other)
             except Exception as e:
                 return self._initialize_error("'other' is invalid", e)
+            if not isinstance(other_dict, dict):
+                return self._initialize_error("'other' must be a JSON object")
         else:
             other_dict = {}
 
-        other_dict["sslmode"] = "verify-full" if config.get("verify_server_cert", True) else "require"
-        if ssl_root_cert := config.get("ssl_root_cert"):
-            other_dict["sslrootcert"] = ssl_root_cert
+        unsupported_options = sorted(set(other_dict) - ALLOWED_OTHER_OPTIONS)
+        if unsupported_options:
+            return self._initialize_error("'other' contains unsupported connection parameter(s): " + ", ".join(unsupported_options))
 
+        other_dict["sslmode"] = "verify-full" if config.get("verify_server_cert", True) else "require"
+
+        ssl_root_cert_file = None
         try:
+            if ssl_root_cert := config.get("ssl_root_cert"):
+                ssl_root_cert_file = tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", suffix=".pem")
+                ssl_root_cert_file.write(ssl_root_cert)
+                ssl_root_cert_file.flush()
+                other_dict["sslrootcert"] = ssl_root_cert_file.name
+
             self._connection = psycopg2.connect(user=username, password=password, dbname=database, host=host, **other_dict)
             self._cursor = self._connection.cursor()
         except Exception as e:
             return self._initialize_error("db login error", e)
+        finally:
+            if ssl_root_cert_file:
+                ssl_root_cert_file.close()
         self.save_progress("Database connection established")
         return phantom.APP_SUCCESS
 

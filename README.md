@@ -37,9 +37,9 @@ VARIABLE | REQUIRED | TYPE | DESCRIPTION
 **username** | required | string | Username |
 **password** | required | password | Password |
 **database** | required | string | Database |
-**other** | optional | string | JSON Object of other libpq connection parameters |
+**other** | optional | string | JSON object of supported non-file libpq connection parameters. The verify_server_cert setting overrides sslmode |
 **verify_server_cert** | optional | boolean | Verify the PostgreSQL server certificate and hostname |
-**ssl_root_cert** | optional | string | Path to a PEM file containing trusted certificate authority certificates. When omitted, libpq uses its default root certificate file |
+**ssl_root_cert** | optional | file | PEM file containing trusted certificate authority certificates. When omitted, libpq uses its default root certificate file |
 
 ### Supported Actions
 

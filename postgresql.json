@@ -47,7 +47,7 @@
             "order": 3
         },
         "other": {
-            "description": "JSON Object of other libpq connection parameters",
+            "description": "JSON object of supported non-file libpq connection parameters. The verify_server_cert setting overrides sslmode",
             "data_type": "string",
             "order": 4
         },
@@ -58,8 +58,8 @@
             "order": 5
         },
         "ssl_root_cert": {
-            "description": "Path to a PEM file containing trusted certificate authority certificates. When omitted, libpq uses its default root certificate file",
-            "data_type": "string",
+            "description": "PEM file containing trusted certificate authority certificates. When omitted, libpq uses its default root certificate file",
+            "data_type": "file",
             "order": 6
         }
     },
