@@ -4,9 +4,11 @@ Publisher: Splunk <br>
 Connector Version: 4.0.0 <br>
 Product Vendor: PostgreSQL <br>
 Product Name: PostgreSQL <br>
-Minimum Product Version: 6.2.1
+Minimum Product Version: 7.0.0
 
 This app supports investigative actions against a PostgreSQL database
+
+The PostgreSQL driver is provided by the Splunk SOAR platform. This app does not package a psycopg2 wheel.
 
 This app will ignore the HTTP_PROXY and HTTPS_PROXY environment variables, as it does not use HTTP
 to connect to the database.
@@ -46,7 +48,8 @@ VARIABLE | REQUIRED | TYPE | DESCRIPTION
 [test connectivity](#action-test-connectivity) - Validate the asset configuration for connectivity using supplied configuration <br>
 [run query](#action-run-query) - Run a query against a table or tables in the database <br>
 [list columns](#action-list-columns) - List the columns of a table <br>
-[list tables](#action-list-tables) - List the tables in the database
+[list tables](#action-list-tables) - List the tables in the database <br>
+[make request](#action-make-request) - Execute SQL through the configured PostgreSQL connection
 
 ## action: 'test connectivity'
 
@@ -84,7 +87,7 @@ PARAMETER | REQUIRED | DESCRIPTION | TYPE | CONTAINS
 
 DATA PATH | TYPE | CONTAINS | EXAMPLE VALUES
 --------- | ---- | -------- | --------------
-action_result.status | string | | success failed |
+action_result.status | string | | success failure |
 action_result.parameter.format_vars | string | | 10 |
 action_result.parameter.no_commit | boolean | | False |
 action_result.parameter.query | string | `sql query` | select * from test_table |
@@ -113,7 +116,7 @@ PARAMETER | REQUIRED | DESCRIPTION | TYPE | CONTAINS
 
 DATA PATH | TYPE | CONTAINS | EXAMPLE VALUES
 --------- | ---- | -------- | --------------
-action_result.status | string | | success failed |
+action_result.status | string | | success failure |
 action_result.parameter.table_name | string | `postgres table name` | users |
 action_result.parameter.table_schema | string | | myschema |
 action_result.data | string | | |
@@ -185,7 +188,7 @@ PARAMETER | REQUIRED | DESCRIPTION | TYPE | CONTAINS
 
 DATA PATH | TYPE | CONTAINS | EXAMPLE VALUES
 --------- | ---- | -------- | --------------
-action_result.status | string | | success failed |
+action_result.status | string | | success failure |
 action_result.parameter.table_schema | string | | myschema |
 action_result.data | string | | |
 action_result.data.\*.commit_action | string | | |
@@ -204,6 +207,28 @@ action_result.summary | string | | |
 action_result.message | string | | Successfully listed all tables |
 summary.total_objects | numeric | | 1 |
 summary.total_objects_successful | numeric | | 1 |
+
+## action: 'make request'
+
+Execute SQL through the configured PostgreSQL connection. This action uses the SDK's standard make request field names for PostgreSQL operations. It does not use HTTP.
+
+GET, HEAD, and OPTIONS skip the connector's commit, like run query with `no_commit` enabled. They do not enforce a read-only transaction; explicit SQL transaction commands are passed through unchanged. POST, PUT, PATCH, and DELETE commit on success. The asset's TLS settings control certificate verification.
+
+#### Action Parameters
+
+PARAMETER | REQUIRED | DESCRIPTION
+--------- | -------- | -----------
+**http_method** | required | GET, HEAD, OPTIONS, POST, PUT, PATCH, or DELETE; selects whether the connector commits after SQL execution |
+**endpoint** | required | SQL statement executed against the configured database |
+**query_parameters** | optional | Bound SQL values as a JSON list, JSON object, or CSV string |
+**body** | optional | Alternative field for bound SQL values; do not use together with query_parameters |
+**timeout** | optional | Statement timeout in seconds |
+**headers** | optional | Unsupported for PostgreSQL; supplying it fails the action |
+**verify_ssl** | optional | Ignored; use the asset's verify_server_cert setting |
+
+#### Action Output
+
+`status_code` is 200 on success. `response_body` is a JSON string containing `rows` and `total_rows` for row-returning SQL, or `affected_rows` for other SQL. Failed actions report their error in the SOAR action status and message.
 
 ______________________________________________________________________
 
