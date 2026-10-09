@@ -1,7 +1,46 @@
+[project]
+name = "postgresql"
+version = "4.0.0"
+description = "This app supports investigative actions against a PostgreSQL database"
+license = "Copyright (c) 2017-2026 Splunk Inc."
+requires-python = ">=3.13, <3.15"
+authors = []
+dependencies = [
+    "splunk-soar-sdk>=4.1.2,<5",
+]
+
+[tool.soar.app]
+main_module = "src.app:app"
+
+[dependency-groups]
+dev = [
+    "pytest>=7.4.2,<9",
+    "ruff>=0.11.6,<1",
+]
+
+[[tool.uv.index]]
+url = "https://pypi.python.org/simple"
+
+[tool.uv]
+environments = [
+    "sys_platform == 'linux' and platform_machine == 'x86_64' and python_version == '3.13'",
+    "sys_platform == 'linux' and platform_machine == 'aarch64' and python_version == '3.13'",
+    "sys_platform == 'darwin' and platform_machine == 'x86_64' and python_version == '3.13'",
+    "sys_platform == 'darwin' and platform_machine == 'arm64' and python_version == '3.13'",
+    "sys_platform == 'linux' and platform_machine == 'x86_64' and python_version == '3.14'",
+    "sys_platform == 'linux' and platform_machine == 'aarch64' and python_version == '3.14'",
+    "sys_platform == 'darwin' and platform_machine == 'x86_64' and python_version == '3.14'",
+    "sys_platform == 'darwin' and platform_machine == 'arm64' and python_version == '3.14'",
+]
+required-environments = [
+    "sys_platform == 'linux' and platform_machine == 'x86_64' and python_version == '3.13'",
+    "sys_platform == 'linux' and platform_machine == 'x86_64' and python_version == '3.14'",
+]
+
 # Ruff linting
 [tool.ruff]
 line-length = 145
-target-version = "py39"
+target-version = "py313"
 
 [tool.ruff.lint]
 select = [ # Auto-fixable rules only
