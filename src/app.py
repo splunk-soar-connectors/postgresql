@@ -16,7 +16,6 @@ import json
 import tempfile
 from datetime import date, datetime
 
-import psycopg2
 from soar_sdk.abstract import SOARClient
 from soar_sdk.action_results import ActionResult, PermissiveActionOutput
 from soar_sdk.actions_manager import ActionsManager
@@ -118,6 +117,9 @@ class PostgresqlHelper:
 
         ssl_root_cert_file = None
         try:
+            # SOAR supplies psycopg2 at runtime; the SDK builder imports this module without it.
+            import psycopg2
+
             if ssl_root_cert := config.get("ssl_root_cert"):
                 ssl_root_cert_file = tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", suffix=".pem")
                 ssl_root_cert_file.write(ssl_root_cert)
