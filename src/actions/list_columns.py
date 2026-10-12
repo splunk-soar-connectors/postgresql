@@ -11,7 +11,6 @@
 # either express or implied. See the License for the specific language governing permissions
 # and limitations under the License.
 
-from pydantic import field_validator
 from soar_sdk.abstract import SOARClient
 from soar_sdk.action_results import OutputField
 from soar_sdk.exceptions import ActionFailure
@@ -27,13 +26,6 @@ logger = getLogger()
 class ListColumnsParams(Params):
     table_name: str = Param(description="Name of table", required=True, primary=True, cef_types=["postgres table name"])
     table_schema: str = Param(description="Table schema", required=False, default="public")
-
-    @field_validator("table_schema", mode="before")
-    @classmethod
-    def normalize_table_schema(cls, value):
-        if value == "":
-            return "public"
-        return value
 
 
 class ListColumnsOutput(PostgresqlActionOutput):

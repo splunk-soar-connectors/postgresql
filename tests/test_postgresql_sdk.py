@@ -1,8 +1,9 @@
 """Database-free regression tests for the PostgreSQL SDK actions."""
 
 import json
+import sys
 from datetime import date, datetime
-from types import SimpleNamespace
+from types import ModuleType, SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -27,7 +28,9 @@ def database(monkeypatch):
     cursor.description = None
     cursor.rowcount = -1
     connect = MagicMock(return_value=connection)
-    monkeypatch.setattr("src.app.psycopg2.connect", connect)
+    psycopg2 = ModuleType("psycopg2")
+    psycopg2.connect = connect
+    monkeypatch.setitem(sys.modules, "psycopg2", psycopg2)
     return connect, connection, cursor
 
 
@@ -231,9 +234,22 @@ def test_list_tables_sql_and_missing_schema(asset, database):
         list_tables.__wrapped__(ListTablesParams(), MagicMock(), asset)
 
 
-def test_empty_optional_schema_uses_public_for_app_tests():
-    assert ListColumnsParams.model_validate({"table_name": "cases", "table_schema": ""}).table_schema == "public"
-    assert ListTablesParams.model_validate({"table_schema": ""}).table_schema == "public"
+def test_empty_optional_schema_is_preserved_as_in_legacy():
+    assert ListColumnsParams.model_validate({"table_name": "cases", "table_schema": ""}).table_schema == ""
+    assert ListTablesParams.model_validate({"table_schema": ""}).table_schema == ""
+
+
+def test_empty_schema_is_queried_and_reports_missing(asset, database):
+    _, _, cursor = database
+    cursor.fetchall.return_value = []
+    with pytest.raises(ActionFailure, match="No matching table schemas could be found"):
+        list_tables.__wrapped__(ListTablesParams(table_schema=""), MagicMock(), asset)
+    cursor.execute.assert_called_once_with("select * from information_schema.schemata where schema_name = %s;", ("",))
+
+    cursor.reset_mock()
+    with pytest.raises(ActionFailure, match="The specified table could not be found"):
+        list_columns.__wrapped__(ListColumnsParams(table_name="cases", table_schema=""), MagicMock(), asset)
+    cursor.execute.assert_called_once_with("SELECT * FROM information_schema.tables WHERE table_name = %s and table_schema = %s;", ("cases", ""))
 
 
 def test_sdk_list_actions_return_app_test_messages(asset, database, soar_client):
@@ -241,7 +257,7 @@ def test_sdk_list_actions_return_app_test_messages(asset, database, soar_client)
     cursor.description = [("table_name",)]
     cursor.fetchall.side_effect = [[("exists",)], [("cases",)]]
     with patch.object(app.actions_manager, "add_result") as add_result:
-        assert list_tables(ListTablesParams.model_validate({"table_schema": ""}), soar_client, asset=asset) is True
+        assert list_tables(ListTablesParams(), soar_client, asset=asset) is True
     result = add_result.call_args.args[0]
     assert result.get_message() == "Successfully listed all tables"
     assert result.get_data() == [{"table_name": "cases"}]
@@ -252,7 +268,7 @@ def test_sdk_list_actions_return_app_test_messages(asset, database, soar_client)
     cursor.description = [("column_name",), ("data_type",)]
     cursor.fetchall.side_effect = [[("exists",)], [("id", "integer")]]
     with patch.object(app.actions_manager, "add_result") as add_result:
-        assert list_columns(ListColumnsParams.model_validate({"table_name": "cases", "table_schema": ""}), soar_client, asset=asset) is True
+        assert list_columns(ListColumnsParams(table_name="cases"), soar_client, asset=asset) is True
     result = add_result.call_args.args[0]
     assert result.get_message() == "Successfully listed all columns"
     assert result.get_data() == [{"column_name": "id", "data_type": "integer"}]
