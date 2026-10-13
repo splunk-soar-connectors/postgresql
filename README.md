@@ -8,12 +8,14 @@ Minimum Product Version: 7.0.0
 
 This app supports investigative actions against a PostgreSQL database
 
-The PostgreSQL driver is provided by the Splunk SOAR platform. This app does not package a psycopg2 wheel.
-
 This app will ignore the HTTP_PROXY and HTTPS_PROXY environment variables, as it does not use HTTP
 to connect to the database.
 
+The PostgreSQL driver is provided by the Splunk SOAR platform. This app does not package a psycopg2 wheel.
+
 This app will use **public** as default schema if no schema provided.
+
+The **make request** action uses the configured PostgreSQL connection to execute SQL, without an HTTP endpoint. Set `endpoint` to SQL and supply bound values through either `query_parameters` or `body` as a JSON list, JSON object, or CSV string. GET, HEAD, and OPTIONS skip the connector's commit, like run query with `no_commit` enabled; they do not enforce a read-only transaction, and explicit SQL transaction commands are passed through unchanged. POST, PUT, PATCH, and DELETE commit on success. The asset's TLS settings control certificate verification.
 
 For more details on configuration parameter 'JSON Object of other libpq connection parameters',
 please visit the [LibPQ Connection Parameters Page](http://initd.org/psycopg/docs/module.html) .
@@ -45,18 +47,20 @@ VARIABLE | REQUIRED | TYPE | DESCRIPTION
 
 ### Supported Actions
 
-[test connectivity](#action-test-connectivity) - Validate the asset configuration for connectivity using supplied configuration <br>
-[run query](#action-run-query) - Run a query against a table or tables in the database <br>
+[test connectivity](#action-test-connectivity) - Validate the asset configuration for connectivity using supplied configuration. <br>
 [list columns](#action-list-columns) - List the columns of a table <br>
 [list tables](#action-list-tables) - List the tables in the database <br>
-[make request](#action-make-request) - Execute SQL through the configured PostgreSQL connection
+[make request](#action-make-request) - Execute SQL through the configured PostgreSQL connection. <br>
+[run query](#action-run-query) - Run a query against a table or tables in the database
 
 ## action: 'test connectivity'
 
-Validate the asset configuration for connectivity using supplied configuration
+Validate the asset configuration for connectivity using supplied configuration.
 
 Type: **test** <br>
 Read only: **True**
+
+Basic test for app.
 
 #### Action Parameters
 
@@ -64,37 +68,10 @@ No parameters are required for this action
 
 #### Action Output
 
-No Output
-
-## action: 'run query'
-
-Run a query against a table or tables in the database
-
-Type: **investigate** <br>
-Read only: **False**
-
-It is recommended to use the <b>format_vars</b> parameter when applicable. For example, if you wanted to find a specific IP, you could set the <b>query</b> to a formatted string, like "select * from my_hosts where ip = %s" (note the use of %s), and set <b>format_vars</b> to the IP address. This will ensure the inputs are safely sanitized and avoid SQL injection attacks. Regardless of the type of input it's expecting, the only format specifier which should be used is %s.<br>Setting <b>no_commit</b> will make it so the App does not commit any changes made to the database (so you can ensure it's a read only query).<br><br>The <b>format_vars</b> parameter accepts a comma seperated list. You can escape commas by surrounding them in double quotes, and escape double quotes with a backslash. Assuming you have a list of values for the format vars, you can employ this code in your playbooks to properly format it into a string:<br> <code>format_vars_str = ','.join(['"{}"'.format(str(x).replace('\\\\', '\\\\\\\\').replace('"', '\\\\"')) for x in format_vars_list])</code>.
-
-#### Action Parameters
-
-PARAMETER | REQUIRED | DESCRIPTION | TYPE | CONTAINS
---------- | -------- | ----------- | ---- | --------
-**query** | required | Query string | string | `sql query` |
-**format_vars** | optional | Comma separated list of variables | string | |
-**no_commit** | optional | Do not commit changes to database | boolean | |
-
-#### Action Output
-
 DATA PATH | TYPE | CONTAINS | EXAMPLE VALUES
 --------- | ---- | -------- | --------------
 action_result.status | string | | success failure |
-action_result.parameter.format_vars | string | | 10 |
-action_result.parameter.no_commit | boolean | | False |
-action_result.parameter.query | string | `sql query` | select * from test_table |
-action_result.data | string | | |
-action_result.summary | string | | |
-action_result.summary.total_rows | numeric | | |
-action_result.message | string | | Successfully ran query |
+action_result.message | string | | |
 summary.total_objects | numeric | | 1 |
 summary.total_objects_successful | numeric | | 1 |
 
@@ -117,9 +94,15 @@ PARAMETER | REQUIRED | DESCRIPTION | TYPE | CONTAINS
 DATA PATH | TYPE | CONTAINS | EXAMPLE VALUES
 --------- | ---- | -------- | --------------
 action_result.status | string | | success failure |
-action_result.parameter.table_name | string | `postgres table name` | users |
-action_result.parameter.table_schema | string | | myschema |
+action_result.message | string | | |
+action_result.parameter.table_name | string | `postgres table name` | |
+action_result.parameter.table_schema | string | | |
 action_result.data | string | | |
+action_result.summary | string | | |
+action_result.data.\*.column_name | string | | user_name |
+action_result.data.\*.data_type | string | | character |
+action_result.data.\*.column_default | string | | |
+action_result.data.\*.is_nullable | string | | YES |
 action_result.data.\*.character_maximum_length | numeric | | 32 |
 action_result.data.\*.character_octet_length | numeric | | |
 action_result.data.\*.character_set_catalog | string | | |
@@ -128,9 +111,6 @@ action_result.data.\*.character_set_schema | string | | |
 action_result.data.\*.collation_catalog | string | | |
 action_result.data.\*.collation_name | string | | |
 action_result.data.\*.collation_schema | string | | |
-action_result.data.\*.column_default | string | | |
-action_result.data.\*.column_name | string | | user_name |
-action_result.data.\*.data_type | string | | character |
 action_result.data.\*.datetime_precision | string | | |
 action_result.data.\*.domain_catalog | string | `domain` | |
 action_result.data.\*.domain_name | string | `domain` | |
@@ -147,7 +127,6 @@ action_result.data.\*.interval_precision | string | | |
 action_result.data.\*.interval_type | string | | |
 action_result.data.\*.is_generated | string | | NEVER |
 action_result.data.\*.is_identity | string | | NO |
-action_result.data.\*.is_nullable | string | | YES |
 action_result.data.\*.is_self_referencing | string | | NO |
 action_result.data.\*.is_updatable | string | | YES |
 action_result.data.\*.maximum_cardinality | string | | |
@@ -164,8 +143,6 @@ action_result.data.\*.table_schema | string | | public |
 action_result.data.\*.udt_catalog | string | | postgres |
 action_result.data.\*.udt_name | string | | bpchar |
 action_result.data.\*.udt_schema | string | | pg_catalog |
-action_result.summary | string | | |
-action_result.message | string | | Successfully listed all columns |
 summary.total_objects | numeric | | 1 |
 summary.total_objects_successful | numeric | | 1 |
 
@@ -189,46 +166,95 @@ PARAMETER | REQUIRED | DESCRIPTION | TYPE | CONTAINS
 DATA PATH | TYPE | CONTAINS | EXAMPLE VALUES
 --------- | ---- | -------- | --------------
 action_result.status | string | | success failure |
-action_result.parameter.table_schema | string | | myschema |
+action_result.message | string | | |
+action_result.parameter.table_schema | string | | |
 action_result.data | string | | |
-action_result.data.\*.commit_action | string | | |
+action_result.summary | string | | |
+action_result.data.\*.table_name | string | `postgres table name` | users |
 action_result.data.\*.is_insertable_into | string | | YES |
+action_result.data.\*.commit_action | string | | |
 action_result.data.\*.is_typed | string | | NO |
 action_result.data.\*.reference_generation | string | | |
 action_result.data.\*.self_referencing_column_name | string | | |
 action_result.data.\*.table_catalog | string | | postgres |
-action_result.data.\*.table_name | string | `postgres table name` | users |
 action_result.data.\*.table_schema | string | | public |
 action_result.data.\*.table_type | string | | BASE TABLE |
 action_result.data.\*.user_defined_type_catalog | string | | |
 action_result.data.\*.user_defined_type_name | string | | |
 action_result.data.\*.user_defined_type_schema | string | | |
-action_result.summary | string | | |
-action_result.message | string | | Successfully listed all tables |
 summary.total_objects | numeric | | 1 |
 summary.total_objects_successful | numeric | | 1 |
 
 ## action: 'make request'
 
-Execute SQL through the configured PostgreSQL connection. This action uses the SDK's standard make request field names for PostgreSQL operations. It does not use HTTP.
+Execute SQL through the configured PostgreSQL connection.
 
-GET, HEAD, and OPTIONS skip the connector's commit, like run query with `no_commit` enabled. They do not enforce a read-only transaction; explicit SQL transaction commands are passed through unchanged. POST, PUT, PATCH, and DELETE commit on success. The asset's TLS settings control certificate verification.
+Type: **generic** <br>
+Read only: **False**
+
+Execute SQL on the configured PostgreSQL asset. GET, HEAD, and OPTIONS skip the connector's commit; POST, PUT, PATCH, and DELETE commit after execution. SQL transaction commands are passed through unchanged. endpoint is SQL; query_parameters or body supplies JSON or CSV bind values. response_body contains JSON rows or an affected row count.
 
 #### Action Parameters
 
-PARAMETER | REQUIRED | DESCRIPTION
---------- | -------- | -----------
-**http_method** | required | GET, HEAD, OPTIONS, POST, PUT, PATCH, or DELETE; selects whether the connector commits after SQL execution |
-**endpoint** | required | SQL statement executed against the configured database |
-**query_parameters** | optional | Bound SQL values as a JSON list, JSON object, or CSV string |
-**body** | optional | Alternative field for bound SQL values; do not use together with query_parameters |
-**timeout** | optional | Statement timeout in seconds |
-**headers** | optional | Unsupported for PostgreSQL; supplying it fails the action |
-**verify_ssl** | optional | Ignored; use the asset's verify_server_cert setting |
+PARAMETER | REQUIRED | DESCRIPTION | TYPE | CONTAINS
+--------- | -------- | ----------- | ---- | --------
+**http_method** | required | GET, HEAD, or OPTIONS skips the connector's commit. POST, PUT, PATCH, or DELETE commits after SQL execution. | string | |
+**endpoint** | required | SQL statement to execute on the configured PostgreSQL database | string | |
+**headers** | optional | Unsupported for PostgreSQL; providing headers fails the action | string | |
+**query_parameters** | optional | SQL bind values as a JSON list or object, or in the run query action's CSV format | string | |
+**body** | optional | SQL bind values as a JSON list or object, or in the run query action's CSV format. Do not provide both body and query_parameters | string | |
+**timeout** | optional | SQL statement timeout in seconds | numeric | |
+**verify_ssl** | optional | Unused; SSL verification is controlled by the asset's verify_server_cert setting | boolean | |
 
 #### Action Output
 
-`status_code` is 200 on success. `response_body` is a JSON string containing `rows` and `total_rows` for row-returning SQL, or `affected_rows` for other SQL. Failed actions report their error in the SOAR action status and message.
+DATA PATH | TYPE | CONTAINS | EXAMPLE VALUES
+--------- | ---- | -------- | --------------
+action_result.status | string | | success failure |
+action_result.message | string | | |
+action_result.parameter.http_method | string | | |
+action_result.parameter.endpoint | string | | |
+action_result.parameter.headers | string | | |
+action_result.parameter.query_parameters | string | | |
+action_result.parameter.body | string | | |
+action_result.parameter.timeout | numeric | | |
+action_result.parameter.verify_ssl | boolean | | |
+action_result.data.\*.status_code | numeric | | 200 404 500 |
+action_result.data.\*.response_body | string | | {"key": "value"} |
+summary.total_objects | numeric | | 1 |
+summary.total_objects_successful | numeric | | 1 |
+
+## action: 'run query'
+
+Run a query against a table or tables in the database
+
+Type: **investigate** <br>
+Read only: **False**
+
+It is recommended to use the <b>format_vars</b> parameter when applicable. For example, if you wanted to find a specific IP, you could set the <b>query</b> to a formatted string, like "select * from my_hosts where ip = %s" (note the use of %s), and set <b>format_vars</b> to the IP address. This will ensure the inputs are safely sanitized and avoid SQL injection attacks. Regardless of the type of input it's expecting, the only format specifier which should be used is %s.<br>Setting <b>no_commit</b> will make it so the App does not commit any changes made to the database (so you can ensure it's a read only query).<br><br>The <b>format_vars</b> parameter accepts a comma seperated list. You can escape commas by surrounding them in double quotes, and escape double quotes with a backslash. Assuming you have a list of values for the format vars, you can employ this code in your playbooks to properly format it into a string:<br> <code>format_vars_str = ','.join(['"{}"'.format(str(x).replace('\\\\', '\\\\\\\\').replace('"', '\\\\"')) for x in format_vars_list])</code>.
+
+#### Action Parameters
+
+PARAMETER | REQUIRED | DESCRIPTION | TYPE | CONTAINS
+--------- | -------- | ----------- | ---- | --------
+**query** | required | Query string | string | `sql query` |
+**format_vars** | optional | Comma separated list of variables | string | |
+**no_commit** | optional | Do not commit changes to database | boolean | |
+
+#### Action Output
+
+DATA PATH | TYPE | CONTAINS | EXAMPLE VALUES
+--------- | ---- | -------- | --------------
+action_result.status | string | | success failure |
+action_result.message | string | | |
+action_result.parameter.query | string | `sql query` | |
+action_result.parameter.format_vars | string | | |
+action_result.parameter.no_commit | boolean | | |
+action_result.data | string | | |
+action_result.summary | string | | |
+action_result.summary.total_rows | numeric | | |
+summary.total_objects | numeric | | 1 |
+summary.total_objects_successful | numeric | | 1 |
 
 ______________________________________________________________________
 
