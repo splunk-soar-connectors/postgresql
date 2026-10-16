@@ -22,6 +22,9 @@ from unittest.mock import MagicMock, patch
 import pytest
 from soar_sdk.exceptions import ActionFailure
 
+from src import auth
+from src.actions.list_columns import ListColumnsOutput, ListColumnsParams, list_columns
+from src.actions.list_tables import ListTablesParams, list_tables
 from src.actions.make_request import PostgresqlMakeRequestParams, make_request
 from src.actions.run_query import RunQueryParams, display_query_results, run_query
 from src.app import PostgresqlHelper, app
@@ -50,6 +53,7 @@ def database(monkeypatch):
     psycopg2.Error = type("Error", (Exception,), {})
     psycopg2.OperationalError = type("OperationalError", (psycopg2.Error,), {})
     monkeypatch.setitem(sys.modules, "psycopg2", psycopg2)
+    monkeypatch.setattr(auth, "psycopg2", psycopg2)
     return connect, connection, cursor
 
 
@@ -118,6 +122,45 @@ def test_run_query_reuses_connection_across_parameter_sets(asset, database):
     connection.close.assert_called_once()
 
 
+def test_list_columns_preserves_numeric_precision_and_sets_summary(asset, database):
+    _, _, cursor = database
+    cursor.description = [
+        ("column_name",),
+        ("data_type",),
+        ("datetime_precision",),
+        ("interval_precision",),
+        ("maximum_cardinality",),
+    ]
+    cursor.fetchall.side_effect = [
+        [("table exists",)],
+        [("created_at", "timestamp without time zone", 6, None, None)],
+    ]
+    soar = MagicMock()
+
+    output = list_columns(ListColumnsParams(table_name="cases"), soar, asset)
+
+    assert output[0].model_dump()["datetime_precision"] == 6
+    assert soar.set_summary.call_args.args[0].total_columns == 1
+    numeric_paths = {field["data_path"] for field in ListColumnsOutput._to_json_schema() if field["data_type"] == "numeric"}
+    assert {
+        "action_result.data.*.datetime_precision",
+        "action_result.data.*.interval_precision",
+        "action_result.data.*.maximum_cardinality",
+    } <= numeric_paths
+
+
+def test_list_tables_sets_summary(asset, database):
+    _, _, cursor = database
+    cursor.description = [("table_name",)]
+    cursor.fetchall.side_effect = [[("public",)], [("cases",), ("events",)]]
+    soar = MagicMock()
+
+    output = list_tables(ListTablesParams(), soar, asset)
+
+    assert [row.model_dump()["table_name"] for row in output] == ["cases", "events"]
+    assert soar.set_summary.call_args.args[0].total_tables == 2
+
+
 def test_make_request_get_passes_explicit_transaction_sql_unchanged(asset, database):
     _, connection, cursor = database
     query = "SET TRANSACTION READ WRITE; UPDATE cases SET state = 'done'; COMMIT;"
@@ -127,6 +170,20 @@ def test_make_request_get_passes_explicit_transaction_sql_unchanged(asset, datab
     cursor.execute.assert_called_once_with(query, None)
     connection.set_session.assert_not_called()
     connection.commit.assert_not_called()
+
+
+def test_make_request_returns_structured_row_count(asset, database):
+    _, _, cursor = database
+    cursor.description = [("value",)]
+    cursor.fetchall.return_value = [(1,)]
+    cursor.rowcount = 1
+
+    output = make_request(PostgresqlMakeRequestParams(http_method="GET", endpoint="SELECT 1 AS value"), asset)
+
+    assert output.status_code == 200
+    assert output.total_rows == 1
+    assert output.affected_rows is None
+    assert json.loads(output.response_body) == {"rows": [{"value": 1}], "total_rows": 1}
 
 
 def test_make_request_timeout_does_not_carry_to_next_parameter_set(asset, database):

@@ -97,8 +97,6 @@ action_result.status | string | | success failure |
 action_result.message | string | | |
 action_result.parameter.table_name | string | `postgres table name` | |
 action_result.parameter.table_schema | string | | |
-action_result.data | string | | |
-action_result.summary | string | | |
 action_result.data.\*.column_name | string | | user_name |
 action_result.data.\*.data_type | string | | character |
 action_result.data.\*.column_default | string | | |
@@ -111,7 +109,7 @@ action_result.data.\*.character_set_schema | string | | |
 action_result.data.\*.collation_catalog | string | | |
 action_result.data.\*.collation_name | string | | |
 action_result.data.\*.collation_schema | string | | |
-action_result.data.\*.datetime_precision | string | | |
+action_result.data.\*.datetime_precision | numeric | | |
 action_result.data.\*.domain_catalog | string | `domain` | |
 action_result.data.\*.domain_name | string | `domain` | |
 action_result.data.\*.domain_schema | string | `domain` | |
@@ -123,13 +121,13 @@ action_result.data.\*.identity_increment | string | | |
 action_result.data.\*.identity_maximum | string | | |
 action_result.data.\*.identity_minimum | string | | |
 action_result.data.\*.identity_start | string | | |
-action_result.data.\*.interval_precision | string | | |
+action_result.data.\*.interval_precision | numeric | | |
 action_result.data.\*.interval_type | string | | |
 action_result.data.\*.is_generated | string | | NEVER |
 action_result.data.\*.is_identity | string | | NO |
 action_result.data.\*.is_self_referencing | string | | NO |
 action_result.data.\*.is_updatable | string | | YES |
-action_result.data.\*.maximum_cardinality | string | | |
+action_result.data.\*.maximum_cardinality | numeric | | |
 action_result.data.\*.numeric_precision | numeric | | |
 action_result.data.\*.numeric_precision_radix | numeric | | |
 action_result.data.\*.numeric_scale | numeric | | |
@@ -143,6 +141,7 @@ action_result.data.\*.table_schema | string | | public |
 action_result.data.\*.udt_catalog | string | | postgres |
 action_result.data.\*.udt_name | string | | bpchar |
 action_result.data.\*.udt_schema | string | | pg_catalog |
+action_result.summary.total_columns | numeric | | |
 summary.total_objects | numeric | | 1 |
 summary.total_objects_successful | numeric | | 1 |
 
@@ -168,8 +167,6 @@ DATA PATH | TYPE | CONTAINS | EXAMPLE VALUES
 action_result.status | string | | success failure |
 action_result.message | string | | |
 action_result.parameter.table_schema | string | | |
-action_result.data | string | | |
-action_result.summary | string | | |
 action_result.data.\*.table_name | string | `postgres table name` | users |
 action_result.data.\*.is_insertable_into | string | | YES |
 action_result.data.\*.commit_action | string | | |
@@ -182,6 +179,7 @@ action_result.data.\*.table_type | string | | BASE TABLE |
 action_result.data.\*.user_defined_type_catalog | string | | |
 action_result.data.\*.user_defined_type_name | string | | |
 action_result.data.\*.user_defined_type_schema | string | | |
+action_result.summary.total_tables | numeric | | |
 summary.total_objects | numeric | | 1 |
 summary.total_objects_successful | numeric | | 1 |
 
@@ -221,6 +219,8 @@ action_result.parameter.timeout | numeric | | |
 action_result.parameter.verify_ssl | boolean | | |
 action_result.data.\*.status_code | numeric | | 200 404 500 |
 action_result.data.\*.response_body | string | | {"key": "value"} |
+action_result.data.\*.total_rows | numeric | | |
+action_result.data.\*.affected_rows | numeric | | |
 summary.total_objects | numeric | | 1 |
 summary.total_objects_successful | numeric | | 1 |
 
@@ -250,8 +250,6 @@ action_result.message | string | | |
 action_result.parameter.query | string | `sql query` | |
 action_result.parameter.format_vars | string | | |
 action_result.parameter.no_commit | boolean | | |
-action_result.data | string | | |
-action_result.summary | string | | |
 action_result.summary.total_rows | numeric | | |
 summary.total_objects | numeric | | 1 |
 summary.total_objects_successful | numeric | | 1 |

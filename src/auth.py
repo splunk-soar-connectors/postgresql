@@ -13,11 +13,16 @@
 # limitations under the License.
 import json
 import tempfile
-from contextlib import ExitStack
 
 from soar_sdk.exceptions import ActionFailure
 
 from .assets import Asset
+
+
+try:
+    import psycopg2
+except ImportError:  # The SDK build environment does not include SOAR's platform driver.
+    psycopg2 = None
 
 
 ALLOWED_OTHER_OPTIONS = frozenset(
@@ -53,16 +58,19 @@ def create_connection(asset: Asset):
         raise ActionFailure("'other' contains unsupported connection parameter(s): " + ", ".join(unsupported_options))
     other["sslmode"] = "verify-full" if asset.verify_server_cert else "require"
 
-    # SOAR supplies the driver at runtime; the SDK builder imports without it.
-    import psycopg2
+    if psycopg2 is None:
+        raise ActionFailure("Database connection failed")
 
+    certificate = None
     try:
-        with ExitStack() as stack:
-            if asset.ssl_root_cert:
-                certificate = stack.enter_context(tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", suffix=".pem"))
-                certificate.write(asset.ssl_root_cert)
-                certificate.flush()
-                other["sslrootcert"] = certificate.name
-            return psycopg2.connect(user=asset.username, password=asset.password, dbname=asset.database, host=asset.host, **other)
+        if asset.ssl_root_cert:
+            certificate = tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", suffix=".pem")
+            certificate.write(asset.ssl_root_cert)
+            certificate.flush()
+            other["sslrootcert"] = certificate.name
+        return psycopg2.connect(user=asset.username, password=asset.password, dbname=asset.database, host=asset.host, **other)
     except (psycopg2.Error, OSError, TypeError, ValueError) as e:
         raise ActionFailure("Database connection failed") from e
+    finally:
+        if certificate is not None:
+            certificate.close()

@@ -12,12 +12,13 @@
 # and limitations under the License.
 
 from soar_sdk.abstract import SOARClient
-from soar_sdk.action_results import OutputField
+from soar_sdk.action_results import ActionOutput, OutputField, PermissiveActionOutput
 from soar_sdk.exceptions import ActionFailure
 from soar_sdk.logging import getLogger
 from soar_sdk.params import Param, Params
 
-from ..app import PostgresqlActionOutput, app
+from .. import auth
+from ..app import app, get_rows
 from ..assets import Asset
 
 
@@ -33,7 +34,7 @@ class ListTablesParams(Params):
     table_schema: str = Param(description="Table schema", required=False, default="public")
 
 
-class ListTablesOutput(PostgresqlActionOutput):
+class ListTablesOutput(PermissiveActionOutput):
     table_name: str | None = OutputField(example_values=["users"], cef_types=["postgres table name"], column_name="Table Name")
     is_insertable_into: str | None = OutputField(example_values=["YES"], column_name="Insertable")
     commit_action: str | None = OutputField()
@@ -48,9 +49,11 @@ class ListTablesOutput(PostgresqlActionOutput):
     user_defined_type_schema: str | None = OutputField()
 
 
-def list_tables(params: ListTablesParams, soar: SOARClient, asset: Asset) -> list[ListTablesOutput]:
-    import psycopg2
+class ListTablesSummary(ActionOutput):
+    total_tables: int
 
+
+def list_tables(params: ListTablesParams, soar: SOARClient, asset: Asset) -> list[ListTablesOutput]:
     logger.progress("In action handler for: list_tables")
     table_schema = params.table_schema
 
@@ -58,7 +61,7 @@ def list_tables(params: ListTablesParams, soar: SOARClient, asset: Asset) -> lis
         query = "select * from information_schema.schemata where schema_name = %s;"
         try:
             helper._cursor.execute(query, (table_schema,))
-        except psycopg2.Error as e:
+        except auth.psycopg2.Error as e:
             raise ActionFailure(f"Error retrieving schemata. Error string: '{e}'") from e
 
         results = helper._cursor.fetchall()
@@ -69,10 +72,11 @@ def list_tables(params: ListTablesParams, soar: SOARClient, asset: Asset) -> lis
         try:
             logger.debug("Executing query")
             helper._cursor.execute(query, (table_schema,))
-        except psycopg2.Error as e:
+        except auth.psycopg2.Error as e:
             raise ActionFailure(f"Error listing tables. Error string: '{e}'") from e
 
-        _, result = helper.get_rows()
+        _, result = get_rows(helper._cursor)
 
+    soar.set_summary(ListTablesSummary(total_tables=len(result)))
     soar.set_message("Successfully listed all tables")
     return [ListTablesOutput(**row) for row in result]

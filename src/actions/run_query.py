@@ -11,15 +11,15 @@
 # either express or implied. See the License for the specific language governing permissions
 # and limitations under the License.
 
-from pydantic import field_validator
 from soar_sdk.abstract import SOARClient
-from soar_sdk.action_results import ActionOutput
+from soar_sdk.action_results import ActionOutput, PermissiveActionOutput
 from soar_sdk.exceptions import ActionFailure
 from soar_sdk.logging import getLogger
 from soar_sdk.params import Param, Params
 from soar_sdk.views.template_renderer import get_template_renderer, get_templates_dir
 
-from ..app import PostgresqlActionOutput, PostgresqlHelper, app
+from .. import auth
+from ..app import app, get_format_vars, get_rows
 from ..assets import Asset
 
 
@@ -39,22 +39,8 @@ class RunQueryParams(Params):
     format_vars: str | None = Param(description="Comma separated list of variables", required=False)
     no_commit: bool = Param(description="Do not commit changes to database", required=False, default=False)
 
-    @field_validator("format_vars", mode="before")
-    @classmethod
-    def normalize_format_vars(cls, value):
-        if isinstance(value, (int, float)):
-            return str(value)
-        return value
 
-    @field_validator("no_commit", mode="before")
-    @classmethod
-    def normalize_no_commit(cls, value):
-        if value is None or value == "":
-            return False
-        return value
-
-
-class RunQueryOutput(PostgresqlActionOutput):
+class RunQueryOutput(PermissiveActionOutput):
     pass
 
 
@@ -79,29 +65,27 @@ def display_query_results(provides, all_results, context):
 
 
 def run_query(params: RunQueryParams, soar: SOARClient, asset: Asset) -> list[RunQueryOutput]:
-    import psycopg2
-
     logger.progress("In action handler for: run_query")
     query = params.query
-    format_vars = PostgresqlHelper._get_format_vars(params.format_vars)
+    format_vars = get_format_vars(params.format_vars)
 
     with app.actions_manager.helper_context(asset) as helper:
         # psycopg2 can also raise Python errors when SQL bind values do not match placeholders.
         try:
             logger.debug("Executing query")
             helper._cursor.execute(query, format_vars)
-        except (psycopg2.Error, IndexError, TypeError, ValueError) as e:
+        except (auth.psycopg2.Error, IndexError, TypeError, ValueError) as e:
             raise ActionFailure(f"Error running query. Error string: '{e}'") from e
 
         if not params.no_commit:
             try:
                 helper._connection.commit()
-            except psycopg2.Error as e:
+            except auth.psycopg2.Error as e:
                 raise ActionFailure(f"Unable to commit changes. Error string: '{e}'") from e
 
         # Row decoding and conversion can raise Python errors as well as psycopg2 errors.
         try:
-            _, result = helper.get_rows()
+            _, result = get_rows(helper._cursor)
         except Exception as e:
             raise ActionFailure(f"Unable to retrieve results from query. Error string: '{e}'") from e
 
