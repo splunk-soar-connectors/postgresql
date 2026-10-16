@@ -12,12 +12,13 @@
 # and limitations under the License.
 
 from soar_sdk.abstract import SOARClient
-from soar_sdk.action_results import OutputField
+from soar_sdk.action_results import OutputField, PermissiveActionOutput
 from soar_sdk.exceptions import ActionFailure
 from soar_sdk.logging import getLogger
 from soar_sdk.params import Param, Params
 
-from ..app import PostgresqlActionOutput, app
+from .. import auth
+from ..app import app, get_rows
 from ..assets import Asset
 
 
@@ -29,7 +30,7 @@ class ListColumnsParams(Params):
     table_schema: str = Param(description="Table schema", required=False, default="public")
 
 
-class ListColumnsOutput(PostgresqlActionOutput):
+class ListColumnsOutput(PermissiveActionOutput):
     column_name: str | None = OutputField(example_values=["user_name"], column_name="Column Name")
     data_type: str | None = OutputField(example_values=["character"], column_name="Data Type")
     column_default: str | None = OutputField(column_name="Default")
@@ -77,8 +78,6 @@ class ListColumnsOutput(PostgresqlActionOutput):
 
 
 def list_columns(params: ListColumnsParams, soar: SOARClient, asset: Asset) -> list[ListColumnsOutput]:
-    import psycopg2
-
     logger.progress("In action handler for: list_columns")
     table_name = params.table_name
     table_schema = params.table_schema
@@ -87,7 +86,7 @@ def list_columns(params: ListColumnsParams, soar: SOARClient, asset: Asset) -> l
         query = "SELECT * FROM information_schema.tables WHERE table_name = %s and table_schema = %s;"
         try:
             helper._cursor.execute(query, (table_name, table_schema))
-        except psycopg2.Error as e:
+        except auth.psycopg2.Error as e:
             raise ActionFailure(f"Error listing columns. Error string: '{e}'") from e
 
         results = helper._cursor.fetchall()
@@ -98,10 +97,10 @@ def list_columns(params: ListColumnsParams, soar: SOARClient, asset: Asset) -> l
         try:
             logger.debug("Executing query")
             helper._cursor.execute(query, (table_name, table_schema))
-        except psycopg2.Error as e:
+        except auth.psycopg2.Error as e:
             raise ActionFailure(f"Error listing columns. Error string: '{e}'") from e
 
-        _, result = helper.get_rows()
+        _, result = get_rows(helper._cursor)
 
     soar.set_message("Successfully listed all columns")
     return [ListColumnsOutput(**row) for row in result]

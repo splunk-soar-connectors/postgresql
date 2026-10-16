@@ -22,6 +22,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 from soar_sdk.exceptions import ActionFailure
 
+from src import auth
 from src.actions.make_request import PostgresqlMakeRequestParams, make_request
 from src.actions.run_query import RunQueryParams, display_query_results, run_query
 from src.app import PostgresqlHelper, app
@@ -50,6 +51,7 @@ def database(monkeypatch):
     psycopg2.Error = type("Error", (Exception,), {})
     psycopg2.OperationalError = type("OperationalError", (psycopg2.Error,), {})
     monkeypatch.setitem(sys.modules, "psycopg2", psycopg2)
+    monkeypatch.setattr(auth, "psycopg2", psycopg2)
     return connect, connection, cursor
 
 

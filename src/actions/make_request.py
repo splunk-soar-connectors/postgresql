@@ -18,7 +18,8 @@ from soar_sdk.action_results import MakeRequestOutput
 from soar_sdk.exceptions import ActionFailure
 from soar_sdk.params import MakeRequestParams, Param
 
-from ..app import PostgresqlHelper, app
+from .. import auth
+from ..app import PostgresqlHelper, app, get_format_vars, get_rows
 from ..assets import Asset
 
 
@@ -58,7 +59,7 @@ def _get_bind_values(value: str | None):
             return json.loads(value)
         except json.JSONDecodeError as e:
             raise ActionFailure("SQL bind values must be valid JSON or CSV") from e
-    return PostgresqlHelper._get_format_vars(value)
+    return get_format_vars(value)
 
 
 @contextmanager
@@ -75,8 +76,6 @@ def _rollback_on_failure(helper: PostgresqlHelper):
 
 def make_request(params: PostgresqlMakeRequestParams, asset: Asset) -> MakeRequestOutput:
     """Execute SQL through the configured PostgreSQL connection."""
-    import psycopg2
-
     http_method = params.http_method.upper()
     if http_method not in READ_METHODS | WRITE_METHODS:
         raise ActionFailure("Unsupported method for PostgreSQL make request")
@@ -95,30 +94,30 @@ def make_request(params: PostgresqlMakeRequestParams, asset: Asset) -> MakeReque
         if params.timeout is not None:
             try:
                 helper._cursor.execute("SELECT set_config('statement_timeout', %s, true)", (str(params.timeout * 1000),))
-            except psycopg2.Error as e:
+            except auth.psycopg2.Error as e:
                 raise ActionFailure("Unable to set SQL statement timeout") from e
             helper._statement_timeout_set = True
         elif helper._statement_timeout_set:
             try:
                 helper._cursor.execute("SET LOCAL statement_timeout TO DEFAULT")
-            except psycopg2.Error as e:
+            except auth.psycopg2.Error as e:
                 raise ActionFailure("Unable to reset SQL statement timeout") from e
             helper._statement_timeout_set = False
 
         try:
             helper._cursor.execute(query, format_vars)
-        except (psycopg2.Error, IndexError, KeyError, TypeError, ValueError) as e:
+        except (auth.psycopg2.Error, IndexError, KeyError, TypeError, ValueError) as e:
             raise ActionFailure("Error running query") from e
 
         if http_method in WRITE_METHODS:
             try:
                 helper._connection.commit()
-            except psycopg2.Error as e:
+            except auth.psycopg2.Error as e:
                 raise ActionFailure("Unable to commit changes") from e
 
         try:
-            columns, result = helper.get_rows()
-        except psycopg2.Error as e:
+            columns, result = get_rows(helper._cursor)
+        except auth.psycopg2.Error as e:
             raise ActionFailure("Unable to retrieve results from query") from e
 
         total_rows = max(helper._cursor.rowcount, 0)

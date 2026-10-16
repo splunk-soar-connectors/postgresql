@@ -97,8 +97,6 @@ action_result.status | string | | success failure |
 action_result.message | string | | |
 action_result.parameter.table_name | string | `postgres table name` | |
 action_result.parameter.table_schema | string | | |
-action_result.data | string | | |
-action_result.summary | string | | |
 action_result.data.\*.column_name | string | | user_name |
 action_result.data.\*.data_type | string | | character |
 action_result.data.\*.column_default | string | | |
@@ -168,8 +166,6 @@ DATA PATH | TYPE | CONTAINS | EXAMPLE VALUES
 action_result.status | string | | success failure |
 action_result.message | string | | |
 action_result.parameter.table_schema | string | | |
-action_result.data | string | | |
-action_result.summary | string | | |
 action_result.data.\*.table_name | string | `postgres table name` | users |
 action_result.data.\*.is_insertable_into | string | | YES |
 action_result.data.\*.commit_action | string | | |
@@ -250,8 +246,6 @@ action_result.message | string | | |
 action_result.parameter.query | string | `sql query` | |
 action_result.parameter.format_vars | string | | |
 action_result.parameter.no_commit | boolean | | |
-action_result.data | string | | |
-action_result.summary | string | | |
 action_result.summary.total_rows | numeric | | |
 summary.total_objects | numeric | | 1 |
 summary.total_objects_successful | numeric | | 1 |
