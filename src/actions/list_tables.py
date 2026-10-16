@@ -17,7 +17,8 @@ from soar_sdk.exceptions import ActionFailure
 from soar_sdk.logging import getLogger
 from soar_sdk.params import Param, Params
 
-from ..app import Asset, PostgresqlActionOutput, PostgresqlHelper, app
+from ..app import PostgresqlActionOutput, app
+from ..assets import Asset
 
 
 logger = getLogger()
@@ -47,22 +48,17 @@ class ListTablesOutput(PostgresqlActionOutput):
     user_defined_type_schema: str | None = OutputField()
 
 
-@app.action(
-    description="List the tables in the database",
-    action_type="investigate",
-    read_only=True,
-    verbose=LIST_TABLES_VERBOSE,
-    render_as="table",
-)
 def list_tables(params: ListTablesParams, soar: SOARClient, asset: Asset) -> list[ListTablesOutput]:
+    import psycopg2
+
     logger.progress("In action handler for: list_tables")
     table_schema = params.table_schema
 
-    with PostgresqlHelper(asset) as helper:
+    with app.actions_manager.helper_context(asset) as helper:
         query = "select * from information_schema.schemata where schema_name = %s;"
         try:
             helper._cursor.execute(query, (table_schema,))
-        except Exception as e:
+        except psycopg2.Error as e:
             raise ActionFailure(f"Error retrieving schemata. Error string: '{e}'") from e
 
         results = helper._cursor.fetchall()
@@ -73,11 +69,10 @@ def list_tables(params: ListTablesParams, soar: SOARClient, asset: Asset) -> lis
         try:
             logger.debug("Executing query")
             helper._cursor.execute(query, (table_schema,))
-        except Exception as e:
+        except psycopg2.Error as e:
             raise ActionFailure(f"Error listing tables. Error string: '{e}'") from e
 
-        columns = PostgresqlHelper._deduplicate_column_names(helper._cursor.description)
-        result = [{columns[index]: column for index, column in enumerate(value)} for value in helper._cursor.fetchall()]
+        _, result = helper.get_rows()
 
     soar.set_message("Successfully listed all tables")
     return [ListTablesOutput(**row) for row in result]
