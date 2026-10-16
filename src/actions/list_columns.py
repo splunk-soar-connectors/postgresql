@@ -12,12 +12,13 @@
 # and limitations under the License.
 
 from soar_sdk.abstract import SOARClient
-from soar_sdk.action_results import OutputField
+from soar_sdk.action_results import ActionOutput, OutputField, PermissiveActionOutput
 from soar_sdk.exceptions import ActionFailure
 from soar_sdk.logging import getLogger
 from soar_sdk.params import Param, Params
 
-from ..app import PostgresqlActionOutput, app
+from .. import auth
+from ..app import app, get_rows
 from ..assets import Asset
 
 
@@ -29,7 +30,7 @@ class ListColumnsParams(Params):
     table_schema: str = Param(description="Table schema", required=False, default="public")
 
 
-class ListColumnsOutput(PostgresqlActionOutput):
+class ListColumnsOutput(PermissiveActionOutput):
     column_name: str | None = OutputField(example_values=["user_name"], column_name="Column Name")
     data_type: str | None = OutputField(example_values=["character"], column_name="Data Type")
     column_default: str | None = OutputField(column_name="Default")
@@ -42,7 +43,7 @@ class ListColumnsOutput(PostgresqlActionOutput):
     collation_catalog: str | None = OutputField()
     collation_name: str | None = OutputField()
     collation_schema: str | None = OutputField()
-    datetime_precision: str | None = OutputField()
+    datetime_precision: int | None = OutputField()
     domain_catalog: str | None = OutputField(cef_types=["domain"])
     domain_name: str | None = OutputField(cef_types=["domain"])
     domain_schema: str | None = OutputField(cef_types=["domain"])
@@ -54,13 +55,13 @@ class ListColumnsOutput(PostgresqlActionOutput):
     identity_maximum: str | None = OutputField()
     identity_minimum: str | None = OutputField()
     identity_start: str | None = OutputField()
-    interval_precision: str | None = OutputField()
+    interval_precision: int | None = OutputField()
     interval_type: str | None = OutputField()
     is_generated: str | None = OutputField(example_values=["NEVER"])
     is_identity: str | None = OutputField(example_values=["NO"])
     is_self_referencing: str | None = OutputField(example_values=["NO"])
     is_updatable: str | None = OutputField(example_values=["YES"])
-    maximum_cardinality: str | None = OutputField()
+    maximum_cardinality: int | None = OutputField()
     numeric_precision: int | None = OutputField()
     numeric_precision_radix: int | None = OutputField()
     numeric_scale: int | None = OutputField()
@@ -76,9 +77,11 @@ class ListColumnsOutput(PostgresqlActionOutput):
     udt_schema: str | None = OutputField(example_values=["pg_catalog"])
 
 
-def list_columns(params: ListColumnsParams, soar: SOARClient, asset: Asset) -> list[ListColumnsOutput]:
-    import psycopg2
+class ListColumnsSummary(ActionOutput):
+    total_columns: int
 
+
+def list_columns(params: ListColumnsParams, soar: SOARClient, asset: Asset) -> list[ListColumnsOutput]:
     logger.progress("In action handler for: list_columns")
     table_name = params.table_name
     table_schema = params.table_schema
@@ -87,7 +90,7 @@ def list_columns(params: ListColumnsParams, soar: SOARClient, asset: Asset) -> l
         query = "SELECT * FROM information_schema.tables WHERE table_name = %s and table_schema = %s;"
         try:
             helper._cursor.execute(query, (table_name, table_schema))
-        except psycopg2.Error as e:
+        except auth.psycopg2.Error as e:
             raise ActionFailure(f"Error listing columns. Error string: '{e}'") from e
 
         results = helper._cursor.fetchall()
@@ -98,10 +101,11 @@ def list_columns(params: ListColumnsParams, soar: SOARClient, asset: Asset) -> l
         try:
             logger.debug("Executing query")
             helper._cursor.execute(query, (table_name, table_schema))
-        except psycopg2.Error as e:
+        except auth.psycopg2.Error as e:
             raise ActionFailure(f"Error listing columns. Error string: '{e}'") from e
 
-        _, result = helper.get_rows()
+        _, result = get_rows(helper._cursor)
 
+    soar.set_summary(ListColumnsSummary(total_columns=len(result)))
     soar.set_message("Successfully listed all columns")
     return [ListColumnsOutput(**row) for row in result]

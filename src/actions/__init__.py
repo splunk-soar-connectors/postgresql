@@ -13,8 +13,8 @@
 # limitations under the License.
 from soar_sdk.app import App
 
-from .list_columns import list_columns
-from .list_tables import LIST_TABLES_VERBOSE, list_tables
+from .list_columns import ListColumnsSummary, list_columns
+from .list_tables import LIST_TABLES_VERBOSE, ListTablesSummary, list_tables
 from .make_request import MAKE_REQUEST_VERBOSE, make_request
 from .run_query import RUN_QUERY_VERBOSE, RunQuerySummary, display_query_results, run_query
 
@@ -27,6 +27,7 @@ def register_actions(app: App) -> App:
         action_type="investigate",
         read_only=True,
         render_as="table",
+        summary_type=ListColumnsSummary,
     )
     app.register_action(
         action=list_tables,
@@ -35,6 +36,7 @@ def register_actions(app: App) -> App:
         read_only=True,
         verbose=LIST_TABLES_VERBOSE,
         render_as="table",
+        summary_type=ListTablesSummary,
     )
     registered_make_request = app.make_request()(make_request)
     registered_make_request.meta.verbose = MAKE_REQUEST_VERBOSE
