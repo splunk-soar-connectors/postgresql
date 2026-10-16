@@ -17,7 +17,8 @@ from soar_sdk.exceptions import ActionFailure
 from soar_sdk.logging import getLogger
 from soar_sdk.params import Param, Params
 
-from ..app import Asset, PostgresqlActionOutput, PostgresqlHelper, app
+from ..app import PostgresqlActionOutput, app
+from ..assets import Asset
 
 
 logger = getLogger()
@@ -75,22 +76,18 @@ class ListColumnsOutput(PostgresqlActionOutput):
     udt_schema: str | None = OutputField(example_values=["pg_catalog"])
 
 
-@app.action(
-    description="List the columns of a table",
-    action_type="investigate",
-    read_only=True,
-    render_as="table",
-)
 def list_columns(params: ListColumnsParams, soar: SOARClient, asset: Asset) -> list[ListColumnsOutput]:
+    import psycopg2
+
     logger.progress("In action handler for: list_columns")
     table_name = params.table_name
     table_schema = params.table_schema
 
-    with PostgresqlHelper(asset) as helper:
+    with app.actions_manager.helper_context(asset) as helper:
         query = "SELECT * FROM information_schema.tables WHERE table_name = %s and table_schema = %s;"
         try:
             helper._cursor.execute(query, (table_name, table_schema))
-        except Exception as e:
+        except psycopg2.Error as e:
             raise ActionFailure(f"Error listing columns. Error string: '{e}'") from e
 
         results = helper._cursor.fetchall()
@@ -101,11 +98,10 @@ def list_columns(params: ListColumnsParams, soar: SOARClient, asset: Asset) -> l
         try:
             logger.debug("Executing query")
             helper._cursor.execute(query, (table_name, table_schema))
-        except Exception as e:
+        except psycopg2.Error as e:
             raise ActionFailure(f"Error listing columns. Error string: '{e}'") from e
 
-        columns = PostgresqlHelper._deduplicate_column_names(helper._cursor.description)
-        result = [{columns[index]: column for index, column in enumerate(value)} for value in helper._cursor.fetchall()]
+        _, result = helper.get_rows()
 
     soar.set_message("Successfully listed all columns")
     return [ListColumnsOutput(**row) for row in result]

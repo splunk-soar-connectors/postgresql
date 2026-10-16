@@ -24,7 +24,8 @@ from soar_sdk.exceptions import ActionFailure
 
 from src.actions.make_request import PostgresqlMakeRequestParams, make_request
 from src.actions.run_query import RunQueryParams, display_query_results, run_query
-from src.app import Asset, PostgresqlHelper, app
+from src.app import PostgresqlHelper, app
+from src.assets import Asset
 
 
 @pytest.fixture
@@ -46,6 +47,8 @@ def database(monkeypatch):
     connect = MagicMock(return_value=connection)
     psycopg2 = ModuleType("psycopg2")
     psycopg2.connect = connect
+    psycopg2.Error = type("Error", (Exception,), {})
+    psycopg2.OperationalError = type("OperationalError", (psycopg2.Error,), {})
     monkeypatch.setitem(sys.modules, "psycopg2", psycopg2)
     return connect, connection, cursor
 
@@ -73,7 +76,7 @@ def test_connection_uses_uploaded_ca_and_verifies_server(asset, database):
 
 def test_connection_failure_does_not_expose_database_details(asset, database):
     connect, _, _ = database
-    connect.side_effect = RuntimeError("secret hostname and password")
+    connect.side_effect = sys.modules["psycopg2"].OperationalError("secret hostname and password")
     with pytest.raises(ActionFailure, match="Database connection failed") as error:
         PostgresqlHelper(asset).connect()
     assert "secret" not in error.value.message
@@ -86,7 +89,7 @@ def test_run_query_keeps_duplicate_columns_dates_and_csv_values(asset, database)
     cursor.rowcount = 2
     soar = MagicMock()
 
-    output = run_query.__wrapped__(RunQueryParams(query="select %s, %s", format_vars='"a,b", c'), soar, asset)
+    output = run_query(RunQueryParams(query="select %s, %s", format_vars='"a,b", c'), soar, asset)
 
     cursor.execute.assert_called_once_with("select %s, %s", ["a,b", "c"])
     connection.commit.assert_called_once()
@@ -119,7 +122,7 @@ def test_make_request_get_passes_explicit_transaction_sql_unchanged(asset, datab
     _, connection, cursor = database
     query = "SET TRANSACTION READ WRITE; UPDATE cases SET state = 'done'; COMMIT;"
 
-    make_request.__wrapped__(PostgresqlMakeRequestParams(http_method="GET", endpoint=query), asset)
+    make_request(PostgresqlMakeRequestParams(http_method="GET", endpoint=query), asset)
 
     cursor.execute.assert_called_once_with(query, None)
     connection.set_session.assert_not_called()
@@ -145,6 +148,34 @@ def test_make_request_timeout_does_not_carry_to_next_parameter_set(asset, databa
         "SELECT 2",
     ]
     connection.commit.assert_not_called()
+
+
+def test_make_request_rolls_back_failed_sql_before_next_parameter(asset, database):
+    _, connection, cursor = database
+
+    def execute(query, _format_vars):
+        if query == "SELECT 1/0 AS value;":
+            raise sys.modules["psycopg2"].Error("division by zero")
+        assert connection.rollback.call_count == 1
+
+    cursor.execute.side_effect = execute
+    cursor.description = [("value",)]
+    cursor.fetchall.return_value = [(1,)]
+    cursor.rowcount = 1
+    parameters = [
+        {"http_method": "GET", "endpoint": "SELECT 1/0 AS value;"},
+        {"http_method": "GET", "endpoint": "SELECT 1 AS value;"},
+    ]
+    input_data = SimpleNamespace(
+        identifier="make_request", model_dump_json=lambda: json.dumps({"identifier": "make_request", "parameters": parameters})
+    )
+
+    with patch.object(app, "_build_magic_args", return_value={"asset": asset}):
+        app.actions_manager.handle(input_data)
+
+    assert [call.args[0] for call in cursor.execute.call_args_list] == [param["endpoint"] for param in parameters]
+    connection.rollback.assert_called_once()
+    connection.close.assert_called_once()
 
 
 def test_query_widget_keeps_each_result_and_empty_state():

@@ -12,13 +12,14 @@
 # and limitations under the License.
 
 import json
-from contextlib import nullcontext
+from contextlib import contextmanager
 
 from soar_sdk.action_results import MakeRequestOutput
 from soar_sdk.exceptions import ActionFailure
 from soar_sdk.params import MakeRequestParams, Param
 
-from ..app import Asset, PostgresqlActionsManager, PostgresqlHelper, app
+from ..app import PostgresqlHelper, app
+from ..assets import Asset
 
 
 READ_METHODS = frozenset({"GET", "HEAD", "OPTIONS"})
@@ -54,18 +55,28 @@ def _get_bind_values(value: str | None):
         return None
     if value.lstrip().startswith(("[", "{")):
         try:
-            format_vars = json.loads(value)
+            return json.loads(value)
         except json.JSONDecodeError as e:
             raise ActionFailure("SQL bind values must be valid JSON or CSV") from e
-        if not isinstance(format_vars, (list, dict)):
-            raise ActionFailure("SQL bind values must be a JSON list or object")
-        return format_vars
-    return PostgresqlHelper._get_format_vars({"format_vars": value})
+    return PostgresqlHelper._get_format_vars(value)
 
 
-@app.make_request()
+@contextmanager
+def _rollback_on_failure(helper: PostgresqlHelper):
+    try:
+        yield
+    except ActionFailure:
+        try:
+            helper._connection.rollback()
+        finally:
+            helper._statement_timeout_set = False
+        raise
+
+
 def make_request(params: PostgresqlMakeRequestParams, asset: Asset) -> MakeRequestOutput:
     """Execute SQL through the configured PostgreSQL connection."""
+    import psycopg2
+
     http_method = params.http_method.upper()
     if http_method not in READ_METHODS | WRITE_METHODS:
         raise ActionFailure("Unsupported method for PostgreSQL make request")
@@ -80,38 +91,34 @@ def make_request(params: PostgresqlMakeRequestParams, asset: Asset) -> MakeReque
 
     query = params.endpoint
     format_vars = _get_bind_values(params.query_parameters or params.body)
-    actions_manager = app.actions_manager
-    helper = actions_manager.get_action_helper(asset) if isinstance(actions_manager, PostgresqlActionsManager) else None
-    helper_context = nullcontext(helper) if helper is not None else PostgresqlHelper(asset)
-
-    with helper_context as helper:
+    with app.actions_manager.helper_context(asset) as helper, _rollback_on_failure(helper):
         if params.timeout is not None:
             try:
                 helper._cursor.execute("SELECT set_config('statement_timeout', %s, true)", (str(params.timeout * 1000),))
-            except Exception as e:
+            except psycopg2.Error as e:
                 raise ActionFailure("Unable to set SQL statement timeout") from e
             helper._statement_timeout_set = True
         elif helper._statement_timeout_set:
             try:
                 helper._cursor.execute("SET LOCAL statement_timeout TO DEFAULT")
-            except Exception as e:
+            except psycopg2.Error as e:
                 raise ActionFailure("Unable to reset SQL statement timeout") from e
             helper._statement_timeout_set = False
 
         try:
             helper._cursor.execute(query, format_vars)
-        except Exception as e:
+        except (psycopg2.Error, IndexError, KeyError, TypeError, ValueError) as e:
             raise ActionFailure("Error running query") from e
 
         if http_method in WRITE_METHODS:
             try:
                 helper._connection.commit()
-            except Exception as e:
+            except psycopg2.Error as e:
                 raise ActionFailure("Unable to commit changes") from e
 
         try:
             columns, result = helper.get_rows()
-        except Exception as e:
+        except psycopg2.Error as e:
             raise ActionFailure("Unable to retrieve results from query") from e
 
         total_rows = max(helper._cursor.rowcount, 0)
@@ -123,7 +130,7 @@ def make_request(params: PostgresqlMakeRequestParams, asset: Asset) -> MakeReque
     return MakeRequestOutput(status_code=200, response_body=response_body)
 
 
-make_request.meta.verbose = (
+MAKE_REQUEST_VERBOSE = (
     "Execute SQL on the configured PostgreSQL asset. GET, HEAD, and OPTIONS skip the connector's commit; "
     "POST, PUT, PATCH, and DELETE commit after execution. SQL transaction commands are passed through unchanged. endpoint is SQL; query_parameters or body "
     "supplies JSON or CSV bind values. response_body contains JSON rows or an affected row count."

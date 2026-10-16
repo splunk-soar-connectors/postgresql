@@ -11,16 +11,16 @@
 # either express or implied. See the License for the specific language governing permissions
 # and limitations under the License.
 
-from contextlib import nullcontext
-
 from pydantic import field_validator
 from soar_sdk.abstract import SOARClient
-from soar_sdk.action_results import ActionOutput, ActionResult
+from soar_sdk.action_results import ActionOutput
+from soar_sdk.exceptions import ActionFailure
 from soar_sdk.logging import getLogger
 from soar_sdk.params import Param, Params
 from soar_sdk.views.template_renderer import get_template_renderer, get_templates_dir
 
-from ..app import Asset, PostgresqlActionOutput, PostgresqlActionsManager, PostgresqlHelper, app
+from ..app import PostgresqlActionOutput, PostgresqlHelper, app
+from ..assets import Asset
 
 
 logger = getLogger()
@@ -78,60 +78,34 @@ def display_query_results(provides, all_results, context):
     return renderer.render_template("postgresql_run_query.html", context)
 
 
-@app.action(
-    description="Run a query against a table or tables in the database",
-    action_type="investigate",
-    read_only=False,
-    verbose=RUN_QUERY_VERBOSE,
-    summary_type=RunQuerySummary,
-    view_handler=display_query_results,
-)
 def run_query(params: RunQueryParams, soar: SOARClient, asset: Asset) -> list[RunQueryOutput]:
+    import psycopg2
+
     logger.progress("In action handler for: run_query")
     query = params.query
-    format_vars = PostgresqlHelper._get_format_vars(params.model_dump())
-    actions_manager = app.actions_manager
-    helper = None
-    failure_params = params.model_dump()
-    if isinstance(actions_manager, PostgresqlActionsManager):
-        helper = actions_manager.get_action_helper(asset)
-        failure_params = actions_manager.get_action_params(params)
-    helper_context = nullcontext(helper) if helper is not None else PostgresqlHelper(asset)
+    format_vars = PostgresqlHelper._get_format_vars(params.format_vars)
 
-    with helper_context as helper:
+    with app.actions_manager.helper_context(asset) as helper:
+        # psycopg2 can also raise Python errors when SQL bind values do not match placeholders.
         try:
             logger.debug("Executing query")
             helper._cursor.execute(query, format_vars)
-        except Exception as e:
-            return ActionResult(
-                False,
-                f"Error running query. Error string: '{e}'",
-                failure_params,
-            )
+        except (psycopg2.Error, IndexError, TypeError, ValueError) as e:
+            raise ActionFailure(f"Error running query. Error string: '{e}'") from e
 
         if not params.no_commit:
             try:
                 helper._connection.commit()
-            except Exception as e:
-                return ActionResult(
-                    False,
-                    f"Unable to commit changes. Error string: '{e}'",
-                    failure_params,
-                )
+            except psycopg2.Error as e:
+                raise ActionFailure(f"Unable to commit changes. Error string: '{e}'") from e
 
+        # Row decoding and conversion can raise Python errors as well as psycopg2 errors.
         try:
             _, result = helper.get_rows()
         except Exception as e:
-            return ActionResult(
-                False,
-                f"Unable to retrieve results from query. Error string: '{e}'",
-                failure_params,
-            )
+            raise ActionFailure(f"Unable to retrieve results from query. Error string: '{e}'") from e
 
-        if helper._cursor.rowcount > 0:
-            total_rows = helper._cursor.rowcount
-        else:
-            total_rows = 0
+        total_rows = max(helper._cursor.rowcount, 0)
 
     soar.set_summary(RunQuerySummary(total_rows=total_rows))
     soar.set_message("Successfully ran query")
