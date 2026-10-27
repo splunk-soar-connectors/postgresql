@@ -3,6 +3,10 @@ to connect to the database.
 
 This app will use **public** as default schema if no schema provided.
 
+TLS is used by default. To connect over a plain unencrypted connection, add the environment variable
+**POSTGRESQL_DISABLE_TLS** with value **true** in the asset's Advanced settings. When set,
+verify_server_cert and ssl_root_cert are ignored.
+
 For more details on configuration parameter 'JSON Object of other libpq connection parameters',
 please visit the [LibPQ Connection Parameters Page](http://initd.org/psycopg/docs/module.html) .
 
