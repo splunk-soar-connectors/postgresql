@@ -52,6 +52,7 @@ except:
 # from postgresql_consts import *
 import csv
 import json
+import os
 import tempfile
 from datetime import date, datetime
 
@@ -63,6 +64,8 @@ class RetVal(tuple):
     def __new__(cls, val1, val2):
         return tuple.__new__(RetVal, (val1, val2))
 
+
+DISABLE_TLS_ENV_VAR = "POSTGRESQL_DISABLE_TLS"
 
 ALLOWED_OTHER_OPTIONS = frozenset(
     {
@@ -116,11 +119,17 @@ class PostgresqlConnector(BaseConnector):
         if unsupported_options:
             return self._initialize_error("'other' contains unsupported connection parameter(s): " + ", ".join(unsupported_options))
 
-        other_dict["sslmode"] = "verify-full" if config.get("verify_server_cert", True) else "require"
+        asset_env = config.get("_reserved_environment_variables") or {}
+        disable_tls = (asset_env.get(DISABLE_TLS_ENV_VAR) or {}).get("value") or os.environ.get(DISABLE_TLS_ENV_VAR, "")
+        use_tls = str(disable_tls).strip().lower() not in ("true", "1", "yes")
+        if not use_tls:
+            other_dict["sslmode"] = "disable"
+        else:
+            other_dict["sslmode"] = "verify-full" if config.get("verify_server_cert", True) else "require"
 
         ssl_root_cert_file = None
         try:
-            if ssl_root_cert := config.get("ssl_root_cert"):
+            if use_tls and (ssl_root_cert := config.get("ssl_root_cert")):
                 ssl_root_cert_file = tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", suffix=".pem")
                 ssl_root_cert_file.write(ssl_root_cert)
                 ssl_root_cert_file.flush()
