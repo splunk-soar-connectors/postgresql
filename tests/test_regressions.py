@@ -78,6 +78,48 @@ def test_connection_uses_uploaded_ca_and_verifies_server(asset, database):
     assert seen["certificate"] == asset.ssl_root_cert
 
 
+def test_connection_requires_tls_without_certificate_verification(asset, database):
+    connect, connection, _ = database
+    seen = {}
+
+    def capture_connect(**kwargs):
+        seen["options"] = kwargs
+        return connection
+
+    asset.verify_server_cert = False
+    connect.side_effect = capture_connect
+    with PostgresqlHelper(asset):
+        pass
+
+    assert seen["options"]["sslmode"] == "require"
+
+
+@pytest.mark.parametrize("disable_tls", ("true", "1", "yes"))
+def test_asset_environment_variable_disables_tls(asset, database, disable_tls):
+    connect, connection, _ = database
+    seen = {}
+
+    def capture_connect(**kwargs):
+        seen["options"] = kwargs
+        return connection
+
+    asset = Asset.model_validate(
+        {
+            **asset.model_dump(),
+            "other": json.dumps({"sslmode": "verify-full"}),
+            "verify_server_cert": False,
+            "ssl_root_cert": "-----BEGIN CERTIFICATE-----\nmock\n-----END CERTIFICATE-----",
+            "_reserved_environment_variables": {"POSTGRESQL_DISABLE_TLS": {"value": disable_tls}},
+        }
+    )
+    connect.side_effect = capture_connect
+    with PostgresqlHelper(asset):
+        pass
+
+    assert seen["options"]["sslmode"] == "disable"
+    assert "sslrootcert" not in seen["options"]
+
+
 def test_connection_failure_does_not_expose_database_details(asset, database):
     connect, _, _ = database
     connect.side_effect = sys.modules["psycopg2"].OperationalError("secret hostname and password")

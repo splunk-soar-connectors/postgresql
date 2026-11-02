@@ -42,7 +42,7 @@ VARIABLE | REQUIRED | TYPE | DESCRIPTION
 **password** | required | password | Password |
 **database** | required | string | Database |
 **other** | optional | string | JSON object of supported non-file libpq connection parameters. The verify_server_cert setting overrides sslmode |
-**verify_server_cert** | optional | boolean | Verify the PostgreSQL server certificate and hostname |
+**verify_server_cert** | optional | boolean | Verify the PostgreSQL server certificate and hostname. Set POSTGRESQL_DISABLE_TLS=true in the asset's Advanced settings to disable TLS; when set, verify_server_cert and ssl_root_cert are ignored. |
 **ssl_root_cert** | optional | file | PEM file containing trusted certificate authority certificates. When omitted, libpq uses its default root certificate file |
 
 ### Supported Actions

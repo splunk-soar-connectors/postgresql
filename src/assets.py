@@ -11,10 +11,15 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from pydantic import ConfigDict
 from soar_sdk.asset import AssetField, BaseAsset, FieldCategory
 
 
 class Asset(BaseAsset):
+    # Retain platform-supplied asset environment variables. They are not app
+    # configuration fields and therefore do not appear in the generated manifest.
+    model_config = ConfigDict(arbitrary_types_allowed=True, extra="allow")
+
     host: str = AssetField(description="Hostname or IP address", required=True, category=FieldCategory.CONNECTIVITY)
     username: str = AssetField(description="Username", required=True, category=FieldCategory.CONNECTIVITY)
     password: str = AssetField(description="Password", required=True, sensitive=True, category=FieldCategory.CONNECTIVITY)
@@ -25,7 +30,10 @@ class Asset(BaseAsset):
         category=FieldCategory.CONNECTIVITY,
     )
     verify_server_cert: bool = AssetField(
-        description="Verify the PostgreSQL server certificate and hostname",
+        description=(
+            "Verify the PostgreSQL server certificate and hostname. Set POSTGRESQL_DISABLE_TLS=true in the asset's "
+            "Advanced settings to disable TLS; when set, verify_server_cert and ssl_root_cert are ignored."
+        ),
         required=False,
         default=True,
         category=FieldCategory.CONNECTIVITY,

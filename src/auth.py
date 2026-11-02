@@ -41,6 +41,8 @@ ALLOWED_OTHER_OPTIONS = frozenset(
     }
 )
 
+DISABLE_TLS_ENV_VAR = "POSTGRESQL_DISABLE_TLS"
+
 
 def create_connection(asset: Asset):
     """Connect using the asset's credentials and legacy TLS settings."""
@@ -56,14 +58,20 @@ def create_connection(asset: Asset):
     unsupported_options = sorted(set(other) - ALLOWED_OTHER_OPTIONS)
     if unsupported_options:
         raise ActionFailure("'other' contains unsupported connection parameter(s): " + ", ".join(unsupported_options))
-    other["sslmode"] = "verify-full" if asset.verify_server_cert else "require"
+    asset_env = (asset.model_extra or {}).get("_reserved_environment_variables") or {}
+    disable_tls = (asset_env.get(DISABLE_TLS_ENV_VAR) or {}).get("value")
+    use_tls = str(disable_tls).strip().lower() not in ("true", "1", "yes")
+    if not use_tls:
+        other["sslmode"] = "disable"
+    else:
+        other["sslmode"] = "verify-full" if asset.verify_server_cert else "require"
 
     if psycopg2 is None:
         raise ActionFailure("Database connection failed")
 
     certificate = None
     try:
-        if asset.ssl_root_cert:
+        if use_tls and asset.ssl_root_cert:
             certificate = tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", suffix=".pem")
             certificate.write(asset.ssl_root_cert)
             certificate.flush()
