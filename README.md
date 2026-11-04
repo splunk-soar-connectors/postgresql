@@ -15,8 +15,6 @@ The PostgreSQL driver is provided by the Splunk SOAR platform. This app does not
 
 This app will use **public** as default schema if no schema provided.
 
-The **make request** action uses the configured PostgreSQL connection to execute SQL, without an HTTP endpoint. Set `endpoint` to SQL and supply bound values through either `query_parameters` or `body` as a JSON list, JSON object, or CSV string. GET, HEAD, and OPTIONS skip the connector's commit, like run query with `no_commit` enabled; they do not enforce a read-only transaction, and explicit SQL transaction commands are passed through unchanged. POST, PUT, PATCH, and DELETE commit on success. The asset's TLS settings control certificate verification.
-
 For more details on configuration parameter 'JSON Object of other libpq connection parameters',
 please visit the [LibPQ Connection Parameters Page](http://initd.org/psycopg/docs/module.html) .
 
@@ -47,15 +45,14 @@ VARIABLE | REQUIRED | TYPE | DESCRIPTION
 
 ### Supported Actions
 
-[test connectivity](#action-test-connectivity) - Validate the asset configuration for connectivity using supplied configuration. <br>
+[test connectivity](#action-test-connectivity) - Validate the asset configuration for connectivity using supplied configuration <br>
 [list columns](#action-list-columns) - List the columns of a table <br>
 [list tables](#action-list-tables) - List the tables in the database <br>
-[make request](#action-make-request) - Execute SQL through the configured PostgreSQL connection. <br>
 [run query](#action-run-query) - Run a query against a table or tables in the database
 
 ## action: 'test connectivity'
 
-Validate the asset configuration for connectivity using supplied configuration.
+Validate the asset configuration for connectivity using supplied configuration
 
 Type: **test** <br>
 Read only: **True**
@@ -180,47 +177,6 @@ action_result.data.\*.user_defined_type_catalog | string | | |
 action_result.data.\*.user_defined_type_name | string | | |
 action_result.data.\*.user_defined_type_schema | string | | |
 action_result.summary.total_tables | numeric | | |
-summary.total_objects | numeric | | 1 |
-summary.total_objects_successful | numeric | | 1 |
-
-## action: 'make request'
-
-Execute SQL through the configured PostgreSQL connection.
-
-Type: **generic** <br>
-Read only: **False**
-
-Execute SQL on the configured PostgreSQL asset. GET, HEAD, and OPTIONS skip the connector's commit; POST, PUT, PATCH, and DELETE commit after execution. SQL transaction commands are passed through unchanged. endpoint is SQL; query_parameters or body supplies JSON or CSV bind values. response_body contains JSON rows or an affected row count.
-
-#### Action Parameters
-
-PARAMETER | REQUIRED | DESCRIPTION | TYPE | CONTAINS
---------- | -------- | ----------- | ---- | --------
-**http_method** | required | GET, HEAD, or OPTIONS skips the connector's commit. POST, PUT, PATCH, or DELETE commits after SQL execution. | string | |
-**endpoint** | required | SQL statement to execute on the configured PostgreSQL database | string | |
-**headers** | optional | Unsupported for PostgreSQL; providing headers fails the action | string | |
-**query_parameters** | optional | SQL bind values as a JSON list or object, or in the run query action's CSV format | string | |
-**body** | optional | SQL bind values as a JSON list or object, or in the run query action's CSV format. Do not provide both body and query_parameters | string | |
-**timeout** | optional | SQL statement timeout in seconds | numeric | |
-**verify_ssl** | optional | Unused; SSL verification is controlled by the asset's verify_server_cert setting | boolean | |
-
-#### Action Output
-
-DATA PATH | TYPE | CONTAINS | EXAMPLE VALUES
---------- | ---- | -------- | --------------
-action_result.status | string | | success failure |
-action_result.message | string | | |
-action_result.parameter.http_method | string | | |
-action_result.parameter.endpoint | string | | |
-action_result.parameter.headers | string | | |
-action_result.parameter.query_parameters | string | | |
-action_result.parameter.body | string | | |
-action_result.parameter.timeout | numeric | | |
-action_result.parameter.verify_ssl | boolean | | |
-action_result.data.\*.status_code | numeric | | 200 404 500 |
-action_result.data.\*.response_body | string | | {"key": "value"} |
-action_result.data.\*.total_rows | numeric | | |
-action_result.data.\*.affected_rows | numeric | | |
 summary.total_objects | numeric | | 1 |
 summary.total_objects_successful | numeric | | 1 |
 

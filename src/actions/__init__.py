@@ -13,10 +13,10 @@
 # limitations under the License.
 from soar_sdk.app import App
 
+from ..views.run_query import display_query_results
 from .list_columns import ListColumnsSummary, list_columns
 from .list_tables import LIST_TABLES_VERBOSE, ListTablesSummary, list_tables
-from .make_request import MAKE_REQUEST_VERBOSE, make_request
-from .run_query import RUN_QUERY_VERBOSE, RunQuerySummary, display_query_results, run_query
+from .run_query import RUN_QUERY_VERBOSE, RunQuerySummary, run_query
 
 
 def register_actions(app: App) -> App:
@@ -38,9 +38,7 @@ def register_actions(app: App) -> App:
         render_as="table",
         summary_type=ListTablesSummary,
     )
-    registered_make_request = app.make_request()(make_request)
-    registered_make_request.meta.verbose = MAKE_REQUEST_VERBOSE
-    # The legacy query view needs the raw callback, not the SDK view adapter.
+    # The legacy widget receives separate ActionResults for each parameter set.
     app.action(
         description="Run a query against a table or tables in the database",
         action_type="investigate",

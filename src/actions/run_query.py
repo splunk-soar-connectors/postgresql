@@ -16,11 +16,10 @@ from soar_sdk.action_results import ActionOutput, PermissiveActionOutput
 from soar_sdk.exceptions import ActionFailure
 from soar_sdk.logging import getLogger
 from soar_sdk.params import Param, Params
-from soar_sdk.views.template_renderer import get_template_renderer, get_templates_dir
 
-from .. import auth
-from ..app import app, get_format_vars, get_rows
-from ..assets import Asset
+from ..asset import Asset
+from ..auth import get_session
+from ..utils import get_format_vars, get_rows
 
 
 logger = getLogger()
@@ -48,48 +47,30 @@ class RunQuerySummary(ActionOutput):
     total_rows: int
 
 
-# Keep the raw view callback because the SDK view decorator flattens action results.
-def display_query_results(provides, all_results, context):
-    context["results"] = results = []
-
-    for summary, action_results in all_results:
-        for result in action_results:
-            data = result.get_data()
-            headers = sorted(data[0].keys()) if data else []
-            rows = [[{"value": item.get(header)} for header in headers] for item in data]
-            results.append({"headers": headers, "data": rows})
-
-    context["prerender"] = True
-    renderer = get_template_renderer("jinja", get_templates_dir(globals()))
-    return renderer.render_template("postgresql_run_query.html", context)
-
-
 def run_query(params: RunQueryParams, soar: SOARClient, asset: Asset) -> list[RunQueryOutput]:
     logger.progress("In action handler for: run_query")
     query = params.query
     format_vars = get_format_vars(params.format_vars)
 
-    with app.actions_manager.helper_context(asset) as helper:
-        # psycopg2 can also raise Python errors when SQL bind values do not match placeholders.
+    with get_session(asset) as session:
         try:
             logger.debug("Executing query")
-            helper._cursor.execute(query, format_vars)
-        except (auth.psycopg2.Error, IndexError, TypeError, ValueError) as e:
+            session._cursor.execute(query, format_vars)
+        except Exception as e:
             raise ActionFailure(f"Error running query. Error string: '{e}'") from e
 
         if not params.no_commit:
             try:
-                helper._connection.commit()
-            except auth.psycopg2.Error as e:
+                session._connection.commit()
+            except Exception as e:
                 raise ActionFailure(f"Unable to commit changes. Error string: '{e}'") from e
 
-        # Row decoding and conversion can raise Python errors as well as psycopg2 errors.
         try:
-            _, result = get_rows(helper._cursor)
+            _, result = get_rows(session._cursor)
         except Exception as e:
             raise ActionFailure(f"Unable to retrieve results from query. Error string: '{e}'") from e
 
-        total_rows = max(helper._cursor.rowcount, 0)
+        total_rows = max(session._cursor.rowcount, 0)
 
     soar.set_summary(RunQuerySummary(total_rows=total_rows))
     soar.set_message("Successfully ran query")

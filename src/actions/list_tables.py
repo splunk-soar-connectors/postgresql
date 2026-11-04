@@ -17,9 +17,9 @@ from soar_sdk.exceptions import ActionFailure
 from soar_sdk.logging import getLogger
 from soar_sdk.params import Param, Params
 
-from .. import auth
-from ..app import app, get_rows
-from ..assets import Asset
+from ..asset import Asset
+from ..auth import get_session
+from ..utils import deduplicate_column_names
 
 
 logger = getLogger()
@@ -57,25 +57,26 @@ def list_tables(params: ListTablesParams, soar: SOARClient, asset: Asset) -> lis
     logger.progress("In action handler for: list_tables")
     table_schema = params.table_schema
 
-    with app.actions_manager.helper_context(asset) as helper:
+    with get_session(asset) as session:
         query = "select * from information_schema.schemata where schema_name = %s;"
         try:
-            helper._cursor.execute(query, (table_schema,))
-        except auth.psycopg2.Error as e:
+            session._cursor.execute(query, (table_schema,))
+        except Exception as e:
             raise ActionFailure(f"Error retrieving schemata. Error string: '{e}'") from e
 
-        results = helper._cursor.fetchall()
+        results = session._cursor.fetchall()
         if len(results) == 0:
             raise ActionFailure("No matching table schemas could be found")
 
         query = "select * from information_schema.tables where table_schema = %s;"
         try:
             logger.debug("Executing query")
-            helper._cursor.execute(query, (table_schema,))
-        except auth.psycopg2.Error as e:
+            session._cursor.execute(query, (table_schema,))
+        except Exception as e:
             raise ActionFailure(f"Error listing tables. Error string: '{e}'") from e
 
-        _, result = get_rows(helper._cursor)
+        columns = deduplicate_column_names(session._cursor.description)
+        result = [{columns[index]: column for index, column in enumerate(value)} for value in session._cursor.fetchall()]
 
     soar.set_summary(ListTablesSummary(total_tables=len(result)))
     soar.set_message("Successfully listed all tables")

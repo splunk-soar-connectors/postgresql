@@ -16,8 +16,7 @@ from soar_sdk.asset import AssetField, BaseAsset, FieldCategory
 
 
 class Asset(BaseAsset):
-    # Retain platform-supplied asset environment variables. They are not app
-    # configuration fields and therefore do not appear in the generated manifest.
+    # Keep SOAR's per-asset advanced environment variables available to auth.py.
     model_config = ConfigDict(arbitrary_types_allowed=True, extra="allow")
 
     host: str = AssetField(description="Hostname or IP address", required=True, category=FieldCategory.CONNECTIVITY)

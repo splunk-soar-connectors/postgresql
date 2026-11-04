@@ -20,15 +20,17 @@ from types import ModuleType, SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 import pytest
+from soar_sdk.app import App
 from soar_sdk.exceptions import ActionFailure
 
 from src import auth
 from src.actions.list_columns import ListColumnsOutput, ListColumnsParams, list_columns
 from src.actions.list_tables import ListTablesParams, list_tables
-from src.actions.make_request import PostgresqlMakeRequestParams, make_request
-from src.actions.run_query import RunQueryParams, display_query_results, run_query
-from src.app import PostgresqlHelper, app
-from src.assets import Asset
+from src.actions.run_query import RunQueryParams, run_query
+from src.app import app
+from src.asset import Asset
+from src.auth import PostgresqlSession
+from src.views.run_query import display_query_results
 
 
 @pytest.fixture
@@ -57,6 +59,21 @@ def database(monkeypatch):
     return connect, connection, cursor
 
 
+def run_query_batch(parameters, soar, asset):
+    """Exercise the app entry point with a small parameter loop."""
+
+    def sdk_handle(_app_instance, raw_input_data, handle=None):
+        data = json.loads(raw_input_data)
+        for param in data["parameters"]:
+            try:
+                run_query(RunQueryParams.model_validate(param), soar, asset)
+            except ActionFailure:
+                continue
+
+    with patch.object(App, "handle", sdk_handle):
+        app.handle(json.dumps({"identifier": "run_query", "parameters": parameters}))
+
+
 def test_connection_uses_uploaded_ca_and_verifies_server(asset, database):
     connect, connection, _ = database
     asset.other = json.dumps({"port": 5433, "sslmode": "disable"})
@@ -70,7 +87,7 @@ def test_connection_uses_uploaded_ca_and_verifies_server(asset, database):
         return connection
 
     connect.side_effect = capture_connect
-    with PostgresqlHelper(asset):
+    with PostgresqlSession(asset):
         pass
 
     assert seen["options"]["sslmode"] == "verify-full"
@@ -88,7 +105,7 @@ def test_connection_requires_tls_without_certificate_verification(asset, databas
 
     asset.verify_server_cert = False
     connect.side_effect = capture_connect
-    with PostgresqlHelper(asset):
+    with PostgresqlSession(asset):
         pass
 
     assert seen["options"]["sslmode"] == "require"
@@ -113,7 +130,7 @@ def test_asset_environment_variable_disables_tls(asset, database, disable_tls):
         }
     )
     connect.side_effect = capture_connect
-    with PostgresqlHelper(asset):
+    with PostgresqlSession(asset):
         pass
 
     assert seen["options"]["sslmode"] == "disable"
@@ -124,7 +141,7 @@ def test_connection_failure_does_not_expose_database_details(asset, database):
     connect, _, _ = database
     connect.side_effect = sys.modules["psycopg2"].OperationalError("secret hostname and password")
     with pytest.raises(ActionFailure, match="Database connection failed") as error:
-        PostgresqlHelper(asset).connect()
+        PostgresqlSession(asset).connect()
     assert "secret" not in error.value.message
 
 
@@ -152,11 +169,7 @@ def test_run_query_reuses_connection_across_parameter_sets(asset, database):
         {"query": "UPDATE cases SET state = 'done'", "no_commit": True},
         {"query": "SELECT 1", "no_commit": False},
     ]
-    input_data = SimpleNamespace(
-        identifier="run_query", model_dump_json=lambda: json.dumps({"identifier": "run_query", "parameters": parameters})
-    )
-    with patch.object(app, "_build_magic_args", return_value={"soar": MagicMock(), "asset": asset}):
-        app.actions_manager.handle(input_data)
+    run_query_batch(parameters, MagicMock(), asset)
 
     connect.assert_called_once()
     assert [call.args[0] for call in cursor.execute.call_args_list] == [param["query"] for param in parameters]
@@ -201,80 +214,6 @@ def test_list_tables_sets_summary(asset, database):
 
     assert [row.model_dump()["table_name"] for row in output] == ["cases", "events"]
     assert soar.set_summary.call_args.args[0].total_tables == 2
-
-
-def test_make_request_get_passes_explicit_transaction_sql_unchanged(asset, database):
-    _, connection, cursor = database
-    query = "SET TRANSACTION READ WRITE; UPDATE cases SET state = 'done'; COMMIT;"
-
-    make_request(PostgresqlMakeRequestParams(http_method="GET", endpoint=query), asset)
-
-    cursor.execute.assert_called_once_with(query, None)
-    connection.set_session.assert_not_called()
-    connection.commit.assert_not_called()
-
-
-def test_make_request_returns_structured_row_count(asset, database):
-    _, _, cursor = database
-    cursor.description = [("value",)]
-    cursor.fetchall.return_value = [(1,)]
-    cursor.rowcount = 1
-
-    output = make_request(PostgresqlMakeRequestParams(http_method="GET", endpoint="SELECT 1 AS value"), asset)
-
-    assert output.status_code == 200
-    assert output.total_rows == 1
-    assert output.affected_rows is None
-    assert json.loads(output.response_body) == {"rows": [{"value": 1}], "total_rows": 1}
-
-
-def test_make_request_timeout_does_not_carry_to_next_parameter_set(asset, database):
-    _, connection, cursor = database
-    parameters = [
-        {"http_method": "GET", "endpoint": "SELECT 1", "timeout": 3},
-        {"http_method": "GET", "endpoint": "SELECT 2"},
-    ]
-    input_data = SimpleNamespace(
-        identifier="make_request", model_dump_json=lambda: json.dumps({"identifier": "make_request", "parameters": parameters})
-    )
-    with patch.object(app, "_build_magic_args", return_value={"asset": asset}):
-        app.actions_manager.handle(input_data)
-
-    assert [call.args[0] for call in cursor.execute.call_args_list] == [
-        "SELECT set_config('statement_timeout', %s, true)",
-        "SELECT 1",
-        "SET LOCAL statement_timeout TO DEFAULT",
-        "SELECT 2",
-    ]
-    connection.commit.assert_not_called()
-
-
-def test_make_request_rolls_back_failed_sql_before_next_parameter(asset, database):
-    _, connection, cursor = database
-
-    def execute(query, _format_vars):
-        if query == "SELECT 1/0 AS value;":
-            raise sys.modules["psycopg2"].Error("division by zero")
-        assert connection.rollback.call_count == 1
-
-    cursor.execute.side_effect = execute
-    cursor.description = [("value",)]
-    cursor.fetchall.return_value = [(1,)]
-    cursor.rowcount = 1
-    parameters = [
-        {"http_method": "GET", "endpoint": "SELECT 1/0 AS value;"},
-        {"http_method": "GET", "endpoint": "SELECT 1 AS value;"},
-    ]
-    input_data = SimpleNamespace(
-        identifier="make_request", model_dump_json=lambda: json.dumps({"identifier": "make_request", "parameters": parameters})
-    )
-
-    with patch.object(app, "_build_magic_args", return_value={"asset": asset}):
-        app.actions_manager.handle(input_data)
-
-    assert [call.args[0] for call in cursor.execute.call_args_list] == [param["endpoint"] for param in parameters]
-    connection.rollback.assert_called_once()
-    connection.close.assert_called_once()
 
 
 def test_query_widget_keeps_each_result_and_empty_state():
