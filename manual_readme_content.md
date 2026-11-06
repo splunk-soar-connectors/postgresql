@@ -1,6 +1,8 @@
 This app will ignore the HTTP_PROXY and HTTPS_PROXY environment variables, as it does not use HTTP
 to connect to the database.
 
+The PostgreSQL driver is provided by the Splunk SOAR platform. This app does not package a psycopg2 wheel.
+
 This app will use **public** as default schema if no schema provided.
 
 For more details on configuration parameter 'JSON Object of other libpq connection parameters',
