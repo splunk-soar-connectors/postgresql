@@ -1,6 +1,6 @@
 [project]
 name = "postgresql"
-version = "4.0.0"
+version = "5.0.0"
 description = "This app supports investigative actions against a PostgreSQL database"
 license = "Copyright (c) 2017-2026 Splunk Inc."
 requires-python = ">=3.13, <3.15"
