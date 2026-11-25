@@ -3,10 +3,10 @@ name = "postgresql"
 version = "5.0.0"
 description = "This app supports investigative actions against a PostgreSQL database"
 license = "Copyright (c) 2017-2026 Splunk Inc."
-requires-python = ">=3.13, <3.15"
+requires-python = ">=3.13, <3.16, !=3.14.*"
 authors = []
 dependencies = [
-    "splunk-soar-sdk>=7.1.2,<8",
+    "splunk-soar-sdk>=7.3.1,<8",
 ]
 
 [tool.soar.app]
@@ -27,14 +27,14 @@ environments = [
     "sys_platform == 'linux' and platform_machine == 'aarch64' and python_version == '3.13'",
     "sys_platform == 'darwin' and platform_machine == 'x86_64' and python_version == '3.13'",
     "sys_platform == 'darwin' and platform_machine == 'arm64' and python_version == '3.13'",
-    "sys_platform == 'linux' and platform_machine == 'x86_64' and python_version == '3.14'",
-    "sys_platform == 'linux' and platform_machine == 'aarch64' and python_version == '3.14'",
-    "sys_platform == 'darwin' and platform_machine == 'x86_64' and python_version == '3.14'",
-    "sys_platform == 'darwin' and platform_machine == 'arm64' and python_version == '3.14'",
+    "sys_platform == 'linux' and platform_machine == 'x86_64' and python_version == '3.15'",
+    "sys_platform == 'linux' and platform_machine == 'aarch64' and python_version == '3.15'",
+    "sys_platform == 'darwin' and platform_machine == 'x86_64' and python_version == '3.15'",
+    "sys_platform == 'darwin' and platform_machine == 'arm64' and python_version == '3.15'",
 ]
 required-environments = [
     "sys_platform == 'linux' and platform_machine == 'x86_64' and python_version == '3.13'",
-    "sys_platform == 'linux' and platform_machine == 'x86_64' and python_version == '3.14'",
+    "sys_platform == 'linux' and platform_machine == 'x86_64' and python_version == '3.15'",
 ]
 
 # Ruff linting
